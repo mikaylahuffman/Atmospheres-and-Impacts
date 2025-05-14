@@ -13,24 +13,24 @@ from tqdm import tqdm
 import os
 import argparse
 
-# parser = argparse.ArgumentParser(description='')
-# parser.add_argument('--startingP',
-#                     dest='startingP',
-#                     type=float,
-#                     help='Starting pressure in bars.',
-#                     required=True)
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--startingP',
+                    dest='startingP',
+                    type=float,
+                    help='Starting pressure in bars.',
+                    required=True)
 
-# parser.add_argument('--planet',
-#                     dest='planet',
-#                     type=str,
-#                     help='Which planet to use (Venus, Earth, Mars).',
-#                     required=True)
+parser.add_argument('--planet',
+                    dest='planet',
+                    type=str,
+                    help='Which planet to use (Venus, Earth, Mars).',
+                    required=True)
 
-startingP=1 #bar
-planet='Earth'
+# startingP=1 #bar
+# planet='Earth'
 
-# base_dir = r"/scratch/alpine/mihu1229/MCv2"
-base_dir = r"D:/parallelizing"
+base_dir = r"/scratch/alpine/mihu1229/MCv4"
+# base_dir = r"D:/parallelizing"
 
 # args = parser.parse_args()
 # planet=args.planet
