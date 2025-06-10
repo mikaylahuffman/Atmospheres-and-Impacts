@@ -1607,9 +1607,10 @@ def psi_2(r_imp,v_imp,current_v_esc,rho_imp,scale_height,rho_atm):
   else:
     if verbiose==1: print('impactor type not recognized')
   D=2*r_imp
-  parens=0.9*current_v_esc/v_imp
   
+
   v_i=v_imp*np.exp(-rho_atm/rho_imp*(-(rho_atm)/(rho_imp)+(scale_height)/(2*r_imp)*((2*scale_height**2)/(3*r_imp**2))**0.5+(scale_height**3*rho_atm)/(r_imp**3*rho_imp)))
+  parens=0.9*current_v_esc/v_i
 
   num=(zeta_v(v_i,current_v_esc, C6, C7, C8)+10**-3*integralquotient(parens))*D**4*rho_imp**0.5 #changed from v_imp to v_i here
   denom=(2*scale_height)**4*rho_atm**0.5
