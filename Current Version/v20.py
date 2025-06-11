@@ -1058,9 +1058,9 @@ def shu_chi_imp(rho_tar,rho_imp,v_imp,v_esc,Xi):
     returnval=comparisonvalue
   # print('which is bigger, 1 or',comparisonvalue,'?')
   # print(returnval)
-  if fixshucheck==True and compusingcheck==True:
+  if fixshucheck==True and compusingcheck==True and returnval<0:
     returnval=math.nan
-  if fixshucheck==True and returnval<0:
+  if fixshucheck==True and returnval<0 and compusingcheck==False:
     returnval=0
   return returnval
 
