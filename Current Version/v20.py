@@ -1243,7 +1243,7 @@ def kerr_m_atm_loss(radius_target,r_imp,rho_target,rho_imp,vimp,atmmass,theta=0)
       X=1
     if compusingcheck==True: 
       X=math.nan
-  loss=atmmass*X*11/3+np.pi #11/3 + pi is the svet00 enhancement factor
+  loss=atmmass*X*(11/3+np.pi) #11/3 + pi is the svet00 enhancement factor
   return loss
 
 def kerrloss(r_imp_array,v_imp_array,rho_imp_array,atmmass):
