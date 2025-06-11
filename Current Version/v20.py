@@ -1254,14 +1254,10 @@ def kerrloss(r_imp_array,v_imp_array,rho_imp_array,atmmass):
   return fixnegatives(m_loss) #force loss values to be >0
 
 def kerrgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,mass_atm,scale_height,planet_radius,n,f_vap,papereqn=False):
-  if ogphamgaineqn==True:
-    papereqn=True
   m_gain=[]
   for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
     m_imp=M_imp(rho_imp,r_imp)
-    m_tan=pham_tan_plane_mass(mass_atm,scale_height)
-    m_crit=pham_crit_mass(n,m_tan)
-    M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
+    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp)
     m_gain.append(M_gain)
   return fixnegatives(m_gain)
 
@@ -1321,14 +1317,10 @@ def galoss(r_imp_array,v_imp_array, rho_imp_array, yimp_array,Z,vesc,targetscale
   return m_loss
 
 def gagain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,mass_atm,scale_height,planet_radius,n,f_vap,papereqn=False):
-  if ogphamgaineqn==True:
-    papereqn=True
   m_gain=[]
   for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
     m_imp=M_imp(rho_imp,r_imp)
-    m_tan=pham_tan_plane_mass(mass_atm,scale_height)
-    m_crit=pham_crit_mass(n,m_tan)
-    M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
+    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp)
     m_gain.append(M_gain)
   return fixnegatives(m_gain)
 
@@ -1420,9 +1412,9 @@ def svetloss(r_imp_array,v_imp_array, rho_imp_array, yimp_array, rho_atm,H,v_esc
     m_loss.append(M_loss)
   return m_loss
 
-def svet_m_atm_gain(rho_imp,r_imp,y_imp): #not using pham here bc this model is only for small imps so it wouldn't matter
+def svet_m_atm_gain(rho_imp,r_imp,y_imp): 
   m_imp=M_imp(rho_imp,r_imp)
-  return fixnegatives(y_imp*m_imp)
+  return sec_m_gain(m_imp, y_imp, v_imp, r_imp)
 
 def svetgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array): #not using pham here bc this model is only for small imps so it wouldn't matter
   m_gain=[]
