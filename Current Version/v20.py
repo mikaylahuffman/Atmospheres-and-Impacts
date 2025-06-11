@@ -1309,9 +1309,9 @@ def kerratmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
 def ga_m_atm_loss(Z,v_imp,vesc,r_imp,targetscaleheight,rho_atm):
   impdiam=2*r_imp
   if enhancementfactorcheck==True:
-    return fixnegatives(((2**(2/3)*Z*(4*(v_imp/vesc)**(1-2/Z)-4**(2/Z)))/(12*(Z-2))*(np.pi*impdiam**2*targetscaleheight*rho_atm)*(v_imp/vesc)**2/Z)*enhancementfactor)
+    return fixnegatives(((2**(2/3)*Z*(4*(v_imp/vesc)**(1-2/Z)-4**(2/Z)))/(12*(Z-2))*(np.pi*impdiam**2*targetscaleheight*rho_atm)*(v_imp/vesc)**(2/Z))*enhancementfactor)
   else:
-    return fixnegatives((2**(2/3)*Z*(4*(v_imp/vesc)**(1-2/Z)-4**(2/Z)))/(12*(Z-2))*(np.pi*impdiam**2*targetscaleheight*rho_atm)*(v_imp/vesc)**2/Z)
+    return fixnegatives((2**(2/3)*Z*(4*(v_imp/vesc)**(1-2/Z)-4**(2/Z)))/(12*(Z-2))*(np.pi*impdiam**2*targetscaleheight*rho_atm)*(v_imp/vesc)**(2/Z))
 
 def galoss(r_imp_array,v_imp_array, rho_imp_array, yimp_array,Z,vesc,targetscaleheight,rho_atm):
   m_loss=[]
@@ -1373,8 +1373,17 @@ def gaatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgain,
 
 #using eqns 11 thru 15 from Svetsov 2000
 
-def integralquotient(x): #only works for k=5, which is the value suggested by svestov 2007
-  return (63*x**11-385*x**9+990*x**7-1386*x**5+1155*x**3-693*x+256)/256
+def integralquotient(parens): #only works for k=5, which is the value suggested by svestov 2007
+  if fixsvet07check==True:
+    if parens>1:
+      if compusingcheck==True:
+        return math.nan
+      elif compusingcheck==False:
+        return 0
+    else:
+      return (63*parens**11-385*parens**9+990*parens**7-1386*parens**5+1155*parens**3-693*parens+256)/256
+  else:
+    return (63*parens**11-385*parens**9+990*parens**7-1386*parens**5+1155*parens**3-693*parens+256)/256
 
 def svet_m_atm_loss(r_imp, rho_imp, Rho_atm,H,v_esc,v_imp,gamma,c_d):
   m_Imp=M_imp(rho_imp,r_imp)
