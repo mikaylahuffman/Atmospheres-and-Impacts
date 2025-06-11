@@ -1831,7 +1831,7 @@ def hilkegain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,gainprint=False
   return m_gain
 
 def deniemDlim(rho_imp,rho_atm):
-  Dlim=(12*np.pi**2*rho_atm*r_planet*H**2/rho_imp)**(1/3) #rho_0 is atmospheric pressure, R is radius of target planet
+  Dlim=(12*rho_atm*r_planet*H**2/rho_imp)**(1/3) #rho_0 is atmospheric pressure, R is radius of target planet
   return Dlim
 
 def deniem_m_atm_gain(r_imp,rho_imp,rho_atm,v_imp,y_imp):
