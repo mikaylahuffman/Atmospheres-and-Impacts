@@ -1771,7 +1771,7 @@ def hilke_m_atm_loss(r_imp, rho_imp, rho_atm):
   massCap = 2*np.pi*rho_atm*(H**2)*planet_radius #eqn 35 in hilke's 2015 paper
   hilker_min = ((3*rho_atm)/rho_imp)**(1/3)*H #rho_atm is atm density, rho_imp is the imp density
   if r_imp>=r_cap:
-    returnval=massCap/1000
+    returnval=massCap
   elif r_cap>r_imp>hilker_min:
     returnval=m_imp*((hilker_min/(2*r_imp))*(1-(hilker_min/r_imp)**2)) #eqn 39 in hilke's 2015 paper
   else:
