@@ -1618,7 +1618,13 @@ def psi_2(r_imp,v_imp,current_v_esc,rho_imp,scale_height,rho_atm):
   D=2*r_imp
   
 
-  v_i=v_imp*np.exp(-rho_atm/rho_imp*(-(rho_atm)/(rho_imp)+(scale_height)/(2*r_imp)*((2*scale_height**2)/(3*r_imp**2))**0.5+(scale_height**3*rho_atm)/(r_imp**3*rho_imp)))
+  v_i=v_imp*np.exp(
+    -rho_atm/rho_imp*(
+      (scale_height)/(2*r_imp)+
+      (2*scale_height**2)/(3*r_imp**2)*(rho_atm/rho_imp)**0.5+
+      (scale_height**3*rho_atm)/(r_imp**3*rho_imp)
+    )
+  )
   parens=0.9*current_v_esc/v_i
 
   num=(zeta_v(v_i,current_v_esc, C6, C7, C8)+10**-3*integralquotient(parens))*D**4*rho_imp**0.5 #changed from v_imp to v_i here
@@ -1635,7 +1641,7 @@ def psi_2(r_imp,v_imp,current_v_esc,rho_imp,scale_height,rho_atm):
       if ifcomplexmakereal==True: denom=np.real(denom)
       if ifcomplextakenorm==True: denom=norm(denom)
   tancomponent=np.arctan2(num,denom)
-  Psi2=(12*rho_atm*(1.5625*D**2*scale_height+3.75*D*scale_height**2+4.5*H**3))/(np.pi*rho_imp*D**3)*tancomponent
+  Psi2=(12*rho_atm*(1.5625*D**2*scale_height+3.75*D*scale_height**2+4.5*scale_height**3))/(np.pi*rho_imp*D**3)*tancomponent
   return Psi2
 
 def svet07_m_atm_loss(r_imp,v_imp,rho_atm,rho_imp,scale_height,current_v_esc,e_0):
