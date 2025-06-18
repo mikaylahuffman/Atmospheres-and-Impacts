@@ -13,28 +13,28 @@ from tqdm import tqdm
 import os
 import argparse
 
-parser = argparse.ArgumentParser(description='')
-parser.add_argument('--startingP',
-                    dest='startingP',
-                    type=float,
-                    help='Starting pressure in bars.',
-                    required=True)
+# parser = argparse.ArgumentParser(description='')
+# parser.add_argument('--startingP',
+#                     dest='startingP',
+#                     type=float,
+#                     help='Starting pressure in bars.',
+#                     required=True)
 
-parser.add_argument('--planet',
-                    dest='planet',
-                    type=str,
-                    help='Which planet to use (Venus, Earth, Mars).',
-                    required=True)
+# parser.add_argument('--planet',
+#                     dest='planet',
+#                     type=str,
+#                     help='Which planet to use (Venus, Earth, Mars).',
+#                     required=True)
 
-# startingP=1 #bar
-# planet='Earth'
+startingP=1 #bar
+planet='Earth'
 
-base_dir = r"/scratch/alpine/mihu1229/MCv5"
-# base_dir = r"D:/parallelizing"
+# base_dir = r"/scratch/alpine/mihu1229/MCv5"
+base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps10k"
 
-args = parser.parse_args()
-planet=args.planet
-startingP=args.startingP
+# args = parser.parse_args()
+# planet=args.planet
+# startingP=args.startingP
 
 if startingP==1: #this is bad coding practice lol
   stringstartingP=int(1)
@@ -51,8 +51,8 @@ if not os.path.exists(output_dir):
 justloadingindata=False
 verbiose=0 #0 means very little printing/plotting, 1 means more printing/plotting
 
-mods=pd.read_csv('/projects/mihu1229/MC/models18.csv')
-# mods=pd.read_csv('models18.csv')
+# mods=pd.read_csv('/projects/mihu1229/MC/models18.csv')
+mods=pd.read_csv('C:/Users/mihu1229/Documents/GitHub/Atmospheres-and-Impacts/Current Version/models18.csv')
 # display(mods)
 
 if verbiose==1:
@@ -99,7 +99,8 @@ Dlimforlosschoice=2 #for deniem, swaps between Dlim for loss being H(rho_0/rho_i
 medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
 numruns=30
-numimps=int(5e6)
+# numimps=int(5e6)
+numimps=10000
 if verbiose==1:
     print(numimps)
 #quickjump
@@ -1772,7 +1773,7 @@ def hilke_m_atm_loss(r_imp, rho_imp, rho_atm):
     returnval=0.
   return fixnegatives(returnval)
 
-def hilke_m_atm_gain(m_imp, y_imp, v_imp, r_imp):
+def hilke_m_atm_gain(m_imp, y_imp, v_imp, r_imp, rho_imp):
   gainreturnval=sec_m_gain(m_imp, y_imp, v_imp, r_imp,rho_imp)
   return fixnegatives(gainreturnval)
 
@@ -1791,7 +1792,7 @@ def hilkeatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,lossprint=
     m_loss.append(M_loss)
 
     m_imp=M_imp(rho_imp,r_imp)
-    M_gain=hilke_m_atm_gain(m_imp, yimp, v_imp, r_imp)
+    M_gain=hilke_m_atm_gain(m_imp, yimp, v_imp, r_imp, rho_imp)
     if gainprint==True:
       print('atm m gain =',M_gain)
     m_gain.append(M_gain)
@@ -1817,7 +1818,7 @@ def hilkegain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,gainprint=False
   m_gain=[]
   for r_imp, v_imp, rho_imp, yimp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
     m_imp=M_imp(rho_imp,r_imp)
-    M_gain=hilke_m_atm_gain(m_imp, yimp, v_imp, r_imp)
+    M_gain=hilke_m_atm_gain(m_imp, yimp, v_imp, r_imp, rho_imp)
     if gainprint==True:
       print('atm m gain =',M_gain)
     m_gain.append(M_gain)
@@ -1926,11 +1927,11 @@ def sectorzeta(v_imp,rho_imp,r_imp):
   k=1/(sectorgamma-1)
   C=2/scipy.special.beta(3/2,k+1)
   M=2*M_imp(rho_imp,r_imp)
+  E=M*(v_imp**2/8-h_vap)
   if fixseccheck==True and E<=0 and compusingcheck==False:
     E=0
   if fixseccheck==True and E<=0 and compusingcheck==True:
     E=math.nan
-  E=M*(v_imp**2/8-h_vap)
   v_i=np.sqrt((2*k+5)*2*E/(3*M))
   x=v_esc/v_i
 
@@ -1948,6 +1949,7 @@ def sectorzeta(v_imp,rho_imp,r_imp):
       zeta=C*scipy.integrate.quad(integrand, x, 1, args=(k))[0]
   elif fixcomplexcheck==True and compusingcheck==True:
     if isinstance(x, complex) or isinstance(k,complex) or isinstance(integrand(x,k),complex): zeta=math.nan
+    else: zeta=C*scipy.integrate.quad(integrand, x, 1, args=(k))[0]
   else:
     zeta=C*scipy.integrate.quad(integrand, x, 1, args=(k))[0]
   return zeta
