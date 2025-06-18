@@ -1877,7 +1877,7 @@ def deniemeta(Dlimforlosschoice,rho_atm,rho_imp,v_imp,r_imp):
 def deniem_m_atm_loss(Dlimforlosschoice,rho_atm,rho_imp,v_imp,r_imp):
   m_loss=deniemeta(Dlimforlosschoice,rho_atm,rho_imp,v_imp,r_imp)*4/3*np.pi*r_imp**3*rho_imp
   if m_loss<0:
-    if compusing==False:
+    if compusingcheck==False:
       m_loss=0
     else:
       m_loss=math.nan
@@ -1925,33 +1925,29 @@ def integrand(xi, k):
 def sectorzeta(v_imp,rho_imp,r_imp):
   k=1/(sectorgamma-1)
   C=2/scipy.special.beta(3/2,k+1)
-  E=M*(v_imp**2/8-h_vap)
   M=2*M_imp(rho_imp,r_imp)
-  v_i=np.sqrt((2*k+5)*2*E)/(3*M)
+  if fixseccheck==True and E<=0 and compusingcheck==False:
+    E=0
+  if fixseccheck==True and E<=0 and compusingcheck==True:
+    E=math.nan
+  E=M*(v_imp**2/8-h_vap)
+  v_i=np.sqrt((2*k+5)*2*E/(3*M))
   x=v_esc/v_i
 
-  if fixcomplexcheck==True:
-    if isinstance(x, complex):
+  if fixcomplexcheck==True and compusingcheck==False:
+    if isinstance(x, complex) or isinstance(k,complex) or isinstance(integrand(x,k),complex):
       if ifcomplexmake0==True: zeta=0
       if ifcomplexmakeverysmall==True: zeta = 0.000000000001
       if ifcomplexmakereal==True: zeta=C*scipy.integrate.quad(integrand, np.real(x), 1, args=(k))[0]
       if ifcomplextakenorm==True: zeta=C*scipy.integrate.quad(integrand, norm(x), 1, args=(k))[0]
-    elif isinstance(k,complex):
-      if ifcomplexmake0==True: zeta=0
-      if ifcomplexmakeverysmall==True: zeta = 0.000000000001
-      if ifcomplexmakereal==True: zeta=C*scipy.integrate.quad(integrand, x, 1, args=(np.real(k)))[0]
-      if ifcomplextakenorm==True: zeta=C*scipy.integrate.quad(integrand, x, 1, args=(norm(k)))[0]
-    elif isinstance(integrand(x,k),complex):
-      if ifcomplexmake0==True: zeta=0
-      if ifcomplexmakeverysmall==True: zeta = 0.000000000001
-      if ifcomplexmakereal==True: zeta=C*np.real(scipy.integrate.quad(integrand, x, 1, args=(k))[0])
-      if ifcomplextakenorm==True: zeta=C*norm(scipy.integrate.quad(integrand, x, 1, args=(k))[0])
     elif x>=1 and fixseccheck==True:
       zeta=0
       if compusingcheck==True:
         zeta=math.nan
     else:
       zeta=C*scipy.integrate.quad(integrand, x, 1, args=(k))[0]
+  elif fixcomplexcheck==True and compusingcheck==True:
+    if isinstance(x, complex) or isinstance(k,complex) or isinstance(integrand(x,k),complex): zeta=math.nan
   else:
     zeta=C*scipy.integrate.quad(integrand, x, 1, args=(k))[0]
   return zeta
