@@ -124,7 +124,6 @@ if planet=='Earth':
   e_0 = 54.7e-3 #km^2 s^-2 Interpolating for N2 using P=1 bar
   #this ^ gets overwritten below if atmchange is set to true
 
-  #sector mod
   specificentropy=(6.8/28.02)*1e-3 #km^2/s^2 K
 
   slope=-3.4648591106161257 #for power law. -3.5, -3.4648591106161257 for earth, -3.3473969290011216 for mars, -3.4533697696073387 for venus
@@ -144,7 +143,6 @@ elif planet=='Mars':
   e_0 = 283.78e-3 #km^2 s^-2 from https://www.engineersedge.com/thermodynamics/thermodynamic_properties_carbon_dioxide_14778.htm Extrapolating using a sigmoid function in log-log space for CO2
   #this ^ gets overwritten below is atmchange is set to true
 
-  #sector mod
   specificentropy=(201.8/44.01)*1e-3 # km^2/s^2 K Interpolating for CO2 using T=213.15 K
 
   slope=-3.3473969290011216 #for power law. -3.5, -3.4648591106161257 for earth, -3.3473969290011216 for mars, -3.4533697696073387 for venus
@@ -164,7 +162,6 @@ elif planet=='Venus':
   e_0 = 94.95e-3 #km^2 s^-2 from https://www.engineersedge.com/thermodynamics/thermodynamic_properties_carbon_dioxide_14778.htm Extrapolating using a sigmoid function in log-log space for CO2
   #this ^ gets overwritten below is atmchange is set to true  
 
-  #sector mod
   specificentropy=(253.3/44.01)*1e-3	#km^2/s^2 K Interpolating for CO2 using T=738.15 K
 
   slope=-3.4533697696073387 #for power law. -3.5, -3.4648591106161257 for earth, -3.3473969290011216 for mars, -3.4533697696073387 for venus
@@ -373,6 +370,10 @@ Z=1.87 #from de Niem 2012 which is from Tonks and Melosh 1992
 c_d=2
 gamma=13/11 #adiabatic coeff
 
+#sector mod
+h_vap=1.3e7*conversionfactor**2 #Jkg^-1= m^2 s^-2*1000^-2=km^2 s^-2
+sectorgamma=1.4
+
 #svet07 consts
 presentday_atm_m=mass_atm
 current_atm_mass=mass_atm 
@@ -404,6 +405,7 @@ asteroidyimp=0.02 #values from deNiem 2012
 
 rho_comet=1e12 #kg/km^3
 rho_asteroid=2.7e12 #kg/km^3
+
 
 
 if printdatatables==True and verbiose==1:
@@ -1257,7 +1259,7 @@ def kerrgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,mass_atm,scale_h
   m_gain=[]
   for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
     m_imp=M_imp(rho_imp,r_imp)
-    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp)
+    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp, rho_imp)
     m_gain.append(M_gain)
   return fixnegatives(m_gain)
 
@@ -1280,7 +1282,7 @@ def kerratmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
       M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
       m_gain.append(M_gain)
     elif modelforgain=='sec':
-      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
       m_gain.append(M_gain)
     elif modelforgain=='simp':
       M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
@@ -1320,7 +1322,7 @@ def gagain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,mass_atm,scale_hei
   m_gain=[]
   for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
     m_imp=M_imp(rho_imp,r_imp)
-    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp)
+    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp, rho_imp)
     m_gain.append(M_gain)
   return fixnegatives(m_gain)
 
@@ -1343,7 +1345,7 @@ def gaatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgain,
       M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
       m_gain.append(M_gain)
     elif modelforgain=='sec':
-      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp,rho_imp)
       m_gain.append(M_gain)
     elif modelforgain=='simp':
       M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
@@ -1414,7 +1416,7 @@ def svetloss(r_imp_array,v_imp_array, rho_imp_array, yimp_array, rho_atm,H,v_esc
 
 def svet_m_atm_gain(rho_imp,r_imp,y_imp): 
   m_imp=M_imp(rho_imp,r_imp)
-  return sec_m_gain(m_imp, y_imp, v_imp, r_imp)
+  return sec_m_gain(m_imp, y_imp, v_imp, r_imp, rho_imp)
 
 def svetgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array): #not using pham here bc this model is only for small imps so it wouldn't matter
   m_gain=[]
@@ -1442,7 +1444,7 @@ def svetatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
       M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
       m_gain.append(M_gain)
     elif modelforgain=='sec':
-      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp,rho_imp)
       m_gain.append(M_gain)
     elif modelforgain=='simp':
       M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
@@ -1771,7 +1773,7 @@ def hilke_m_atm_loss(r_imp, rho_imp, rho_atm):
   return fixnegatives(returnval)
 
 def hilke_m_atm_gain(m_imp, y_imp, v_imp, r_imp):
-  gainreturnval=sec_m_gain(m_imp, y_imp, v_imp, r_imp)
+  gainreturnval=sec_m_gain(m_imp, y_imp, v_imp, r_imp,rho_imp)
   return fixnegatives(gainreturnval)
 
 def hilkeatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,lossprint=False,gainprint=False):
@@ -1920,11 +1922,13 @@ def integrand(xi, k):
       return 0
     return xi**2*(1-xi**2)**k
 
-def sectorzeta(v_imp):
-  k=1/(specificentropy-1)
+def sectorzeta(v_imp,rho_imp,r_imp):
+  k=1/(sectorgamma-1)
   C=2/scipy.special.beta(3/2,k+1)
-  v_inf=v_imp*np.sqrt(4*gamma/(gamma-1))
-  x=v_esc/v_inf
+  E=M*(v_imp**2/8-h_vap)
+  M=2*M_imp(rho_imp,r_imp)
+  v_i=np.sqrt((2*k+5)*2*E)/(3*M)
+  x=v_esc/v_i
 
   if fixcomplexcheck==True:
     if isinstance(x, complex):
@@ -1952,16 +1956,16 @@ def sectorzeta(v_imp):
     zeta=C*scipy.integrate.quad(integrand, x, 1, args=(k))[0]
   return zeta
 
-def sec_m_gain(m_imp, y_imp, v_imp, r_imp):
+def sec_m_gain(m_imp, y_imp, v_imp, r_imp, rho_imp):
   if dragcheck==True:
     v_imp=drag(r_imp,v_imp)
-  returnval=(1-sectorzeta(v_imp))*y_imp*m_imp
+  returnval=(1-sectorzeta(v_imp,rho_imp,r_imp))*y_imp*m_imp
   return fixnegatives(returnval)
 
 def secgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
   m_gain=[]
   for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
-    M_gain=sec_m_gain(M_imp(rho_imp,r_imp), y_imp, v_imp, r_imp)
+    M_gain=sec_m_gain(M_imp(rho_imp,r_imp), y_imp, v_imp, r_imp, rho_imp)
     m_gain.append(M_gain)
   return m_gain
 
@@ -2040,7 +2044,7 @@ def comprun(papereqn=False):
           M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
           gain.append(M_gain)
         elif svetmodelforgain=='sec':
-          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
           gain.append(M_gain)
         elif svetmodelforgain=='simp':
           M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
@@ -2084,7 +2088,7 @@ def comprun(papereqn=False):
           M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
           gain.append(M_gain)
         elif gamodelforgain=='sec':
-          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
           gain.append(M_gain)
         elif gamodelforgain=='simp':
           M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
@@ -2102,7 +2106,7 @@ def comprun(papereqn=False):
           M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
           gain.append(M_gain)
         elif kerrmodelforgain=='sec':
-          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
           gain.append(M_gain)
         elif kerrmodelforgain=='simp':
           M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
@@ -2240,7 +2244,7 @@ def compatmchangerun(papereqn=False):
             M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='svet')
           gain.append(M_gain)
         elif svetmodelforgain=='sec':
-          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
           if fixcompcheck==True:
             M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='svet')
           gain.append(M_gain)
@@ -2323,7 +2327,7 @@ def compatmchangerun(papereqn=False):
             M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
           gain.append(M_gain)
         elif gamodelforgain=='sec':
-          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
           if fixcompcheck==True:
             M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
           gain.append(M_gain)
@@ -2350,7 +2354,7 @@ def compatmchangerun(papereqn=False):
             M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
           gain.append(M_gain)
         elif kerrmodelforgain=='sec':
-          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp)
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
           if fixcompcheck==True:
             M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
           gain.append(M_gain)
