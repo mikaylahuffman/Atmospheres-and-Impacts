@@ -30,7 +30,7 @@ startingP=1 #bar
 planet='Earth'
 
 # base_dir = r"/scratch/alpine/mihu1229/MCv5"
-base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps10k"
+base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps50k"
 
 # args = parser.parse_args()
 # planet=args.planet
@@ -100,7 +100,7 @@ medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
 numruns=30
 # numimps=int(5e6)
-numimps=10000
+numimps=50000
 if verbiose==1:
     print(numimps)
 #quickjump
@@ -1928,12 +1928,12 @@ def sectorzeta(v_imp,rho_imp,r_imp):
   C=2/scipy.special.beta(3/2,k+1)
   M=2*M_imp(rho_imp,r_imp)
   E=M*(v_imp**2/8-h_vap)
-  if fixseccheck==True and E<=0 and compusingcheck==False:
-    E=0
-  if fixseccheck==True and E<=0 and compusingcheck==True:
-    E=math.nan
+  if E <= 0:
+    return 0.0 if not compusingcheck else math.nan
   v_i=np.sqrt((2*k+5)*2*E/(3*M))
   x=v_esc/v_i
+  if x >= 1:
+    return 0.0 if not compusingcheck else math.nan
 
   if fixcomplexcheck==True and compusingcheck==False:
     if isinstance(x, complex) or isinstance(k,complex) or isinstance(integrand(x,k),complex):
