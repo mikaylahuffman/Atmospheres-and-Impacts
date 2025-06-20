@@ -13,28 +13,28 @@ from tqdm import tqdm
 import os
 import argparse
 
-# parser = argparse.ArgumentParser(description='')
-# parser.add_argument('--startingP',
-#                     dest='startingP',
-#                     type=float,
-#                     help='Starting pressure in bars.',
-#                     required=True)
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--startingP',
+                    dest='startingP',
+                    type=float,
+                    help='Starting pressure in bars.',
+                    required=True)
 
-# parser.add_argument('--planet',
-#                     dest='planet',
-#                     type=str,
-#                     help='Which planet to use (Venus, Earth, Mars).',
-#                     required=True)
+parser.add_argument('--planet',
+                    dest='planet',
+                    type=str,
+                    help='Which planet to use (Venus, Earth, Mars).',
+                    required=True)
 
-startingP=1 #bar
-planet='Earth'
+# startingP=1 #bar
+# planet='Earth'
 
-# base_dir = r"/scratch/alpine/mihu1229/MCv5"
-base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps50k"
+base_dir = r"/scratch/alpine/mihu1229/MCv6"
+# base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps50k"
 
-# args = parser.parse_args()
-# planet=args.planet
-# startingP=args.startingP
+args = parser.parse_args()
+planet=args.planet
+startingP=args.startingP
 
 if startingP==1: #this is bad coding practice lol
   stringstartingP=int(1)
@@ -99,8 +99,8 @@ Dlimforlosschoice=2 #for deniem, swaps between Dlim for loss being H(rho_0/rho_i
 medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
 numruns=30
-# numimps=int(5e6)
-numimps=50000
+numimps=int(5e6)
+# numimps=50000
 if verbiose==1:
     print(numimps)
 #quickjump
