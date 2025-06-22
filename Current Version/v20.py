@@ -1683,12 +1683,12 @@ def zeta(r_imp,current_v_esc,v_imp,scale_height,rho_imp,rho_atm):
   if fixcomplexcheck==True and isinstance(val1,complex):
     if ifcomplexmake0==True: val1=0
     if ifcomplexmakeverysmall==True: val1=0.000000000001
-    if ifcomplexmakereal==True: val1=np.real(zeta_v(v_imp,current_v_esc, C6, C7, C8)**4*D**1.2*rho_imp**0.5)
+    if ifcomplexmakereal==True: val1=np.real(zeta_v(v_imp,current_v_esc, C6, C7, C8)**4*r_imp**1.2*rho_imp**0.5)
     if ifcomplextakenorm==True: val1= norm(val1)
   if fixcomplexcheck==True and isinstance(val2,complex):
     if ifcomplexmake0==True: val2= 0
     if ifcomplexmakeverysmall==True: val2= 0.000000000001
-    if ifcomplexmakereal==True: val2= np.real(2*scale_height**1.2*rho_atm**0.5)
+    if ifcomplexmakereal==True: val2= np.real(scale_height**1.2*rho_atm**0.5)
     if ifcomplextakenorm==True: val2=norm(val2)
   Zeta=psi_1(0.35*D/2,v_imp,rho_atm,rho_imp,scale_height,current_v_esc,e_0)/svetdelta*(C7*current_v_esc/v_imp)**0.25+zeta_v(v_imp,current_v_esc, C6, C7, C8)*2/np.pi*np.arctan2(val1,val2)
   if fixcomplexcheck==True and isinstance(Zeta,complex):
