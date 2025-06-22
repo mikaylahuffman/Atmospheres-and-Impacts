@@ -1678,8 +1678,8 @@ def zeta(r_imp,current_v_esc,v_imp,scale_height,rho_imp,rho_atm):
   else:
     if verbiose==1: print('impactor type not recognized')
   D=r_imp*2
-  val1=zeta_v(v_imp,current_v_esc, C6, C7, C8)**4*D**1.2*rho_imp**0.5
-  val2=2*scale_height**1.2*rho_atm**0.5
+  val1=zeta_v(v_imp,current_v_esc, C6, C7, C8)**4*r_imp**1.2*rho_imp**0.5
+  val2=scale_height**1.2*rho_atm**0.5
   if fixcomplexcheck==True and isinstance(val1,complex):
     if ifcomplexmake0==True: val1=0
     if ifcomplexmakeverysmall==True: val1=0.000000000001
