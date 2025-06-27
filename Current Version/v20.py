@@ -29,7 +29,7 @@ parser.add_argument('--planet',
 # startingP=1 #bar
 # planet='Earth'
 
-base_dir = r"/scratch/alpine/mihu1229/MCv6"
+base_dir = r"/scratch/alpine/mihu1229/MCv7"
 # base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps50k"
 
 args = parser.parse_args()
@@ -51,8 +51,8 @@ if not os.path.exists(output_dir):
 justloadingindata=False
 verbiose=0 #0 means very little printing/plotting, 1 means more printing/plotting
 
-# mods=pd.read_csv('/projects/mihu1229/MC/models18.csv')
-mods=pd.read_csv('C:/Users/mihu1229/Documents/GitHub/Atmospheres-and-Impacts/Current Version/models18.csv')
+mods=pd.read_csv('/projects/mihu1229/MC/models18.csv')
+# mods=pd.read_csv('C:/Users/mihu1229/Documents/GitHub/Atmospheres-and-Impacts/Current Version/models18.csv')
 # display(mods)
 
 if verbiose==1:
