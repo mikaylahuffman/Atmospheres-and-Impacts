@@ -2986,21 +2986,24 @@ def runmodels(): #doing globals like this ain't great coding habits
 
 def multiproc_running_models(run_id):
     global numrun, r_imp_array, v_imp_array, rho_imp_array, yimp_array
+    try:
+        numrun = run_id
+        r_imp_array = []
+        v_imp_array = []
+        rho_imp_array = []
+        yimp_array = []
 
-    numrun = run_id
-    r_imp_array = []
-    v_imp_array = []
-    rho_imp_array = []
-    yimp_array = []
+        for ind in range(1, numimps + 1):
+            r_imp_array.append(imp_arrays[run_id][ind][0])
+            v_imp_array.append(imp_arrays[run_id][ind][1])
+            rho_imp_array.append(imp_arrays[run_id][ind][2])
+            yimp_array.append(imp_arrays[run_id][ind][3])
 
-    for ind in range(1, numimps + 1):
-        r_imp_array.append(imp_arrays[numrun][ind][0])
-        v_imp_array.append(imp_arrays[numrun][ind][1])
-        rho_imp_array.append(imp_arrays[numrun][ind][2])
-        yimp_array.append(imp_arrays[numrun][ind][3])
-
-    runmodels()
-    return run_id
+        runmodels()
+        return run_id
+    except Exception as e:
+        print(f"Run {run_id} failed: {e}", flush=True)
+        raise
 
 if __name__ == "__main__":
   if numruns==1 and atmchange==True:
