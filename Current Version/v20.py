@@ -1087,7 +1087,7 @@ def shuatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,lossprint=Fa
       print('atm m loss =',M_loss)
     m_loss.append(M_loss)
 
-    Xi=shu_xi(r_imp,H,rho_imp,rho_atm,v_imp,v_esc,rho_tar)
+    Xi=shu_xi(r_imp,H,rho_imp,new_rho_atm,v_imp,v_esc,rho_tar)
     Chi_imp=shu_chi_imp(rho_tar,rho_imp,v_imp,v_esc,Xi)
     M_gain=shu_m_atm_gain(r_imp,rho_imp,Chi_imp)
     if gainprint==True:
@@ -1277,7 +1277,7 @@ def kerratmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
     m_loss.append(M_loss)
 
     if modelforgain=='pham':
-      m_imp=M_imp(new_rho_atm,r_imp)
+      m_imp=M_imp(rho_imp,r_imp)
       m_tan=pham_tan_plane_mass(new_atm_m,H)
       m_crit=pham_crit_mass(n,m_tan)
       M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
@@ -1340,7 +1340,7 @@ def gaatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgain,
     m_loss.append(M_loss)
 
     if modelforgain=='pham':
-      m_imp=M_imp(new_rho_atm,r_imp)
+      m_imp=M_imp(rho_imp,r_imp)
       m_tan=pham_tan_plane_mass(new_atm_m,H)
       m_crit=pham_crit_mass(n,m_tan)
       M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
@@ -1439,7 +1439,7 @@ def svetatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
     m_loss.append(M_loss)
 
     if modelforgain=='pham':
-      m_imp=M_imp(new_rho_atm,r_imp)
+      m_imp=M_imp(rho_imp,r_imp)
       m_tan=pham_tan_plane_mass(new_atm_m,H)
       m_crit=pham_crit_mass(n,m_tan)
       M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
@@ -2036,7 +2036,7 @@ def comprun(papereqn=False):
     for model in compdict[i][1]:
       if model=='svet':
         if svetmodelforgain=='pham':
-          m_imp=M_imp(rho_atm,r_imp)
+          m_imp=M_imp(rho_imp,r_imp)
           m_tan=pham_tan_plane_mass(mass_atm,H)
           m_crit=pham_crit_mass(n,m_tan)
           M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
@@ -2076,11 +2076,11 @@ def comprun(papereqn=False):
         Xi=shu_xi(r_imp,H,rho_imp,rho_atm,v_imp,v_esc,rho_tar)
         chi_A=shu_chi_a(Xi)
         Chi_imp=shu_chi_imp(rho_tar,rho_imp,v_imp,v_esc,Xi)
-        gain.append(shu_m_atm_loss(chi_A,m_imp,v_imp,v_esc))
-        loss.append(shu_m_atm_gain(r_imp,rho_imp,Chi_imp))
+        gain.append(shu_m_atm_gain(chi_A,m_imp,v_imp,v_esc))
+        loss.append(shu_m_atm_loss(r_imp,rho_imp,Chi_imp))
       elif model=='ga':
         if gamodelforgain=='pham':
-          m_imp=M_imp(rho_atm,r_imp)
+          m_imp=M_imp(rho_imp,r_imp)
           m_tan=pham_tan_plane_mass(mass_atm,H)
           m_crit=pham_crit_mass(n,m_tan)
           M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
@@ -2098,7 +2098,7 @@ def comprun(papereqn=False):
         loss.append(ga_m_atm_loss(Z,v_imp,v_esc,r_imp,H,rho_atm))
       elif model=='kerr':
         if kerrmodelforgain=='pham':
-          m_imp=M_imp(rho_atm,r_imp)
+          m_imp=M_imp(rho_imp,r_imp)
           m_tan=pham_tan_plane_mass(mass_atm,H)
           m_crit=pham_crit_mass(n,m_tan)
           M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
@@ -2293,7 +2293,7 @@ def compatmchangerun(papereqn=False):
           M_loss=fixit(new_atm_m,M_loss,gainorloss='loss',model='pham2400')
         loss.append(M_loss)
       elif model=='pham':
-        m_tan=pham_tan_plane_mass(mass_atm,scale_height)
+        m_tan=pham_tan_plane_mass(new_atm_m,scale_height)
         m_crit=pham_crit_mass(n,m_tan)
         M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
         if fixcompcheck==True:
