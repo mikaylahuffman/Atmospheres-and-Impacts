@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -963,6 +964,7 @@ def savepickle(modelnickname, losslist, gainlist, deltalist):
         df = pd.DataFrame(data)
 
         # Save DataFrame as a single pickle file
+        print(f"Writing {filepath}", flush=True)
         with open(filepath, 'wb') as outFile:
             pickle.dump(df, outFile)
 
@@ -2982,46 +2984,62 @@ def runmodels(): #doing globals like this ain't great coding habits
       if verbiose==1: print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
     #mika here need to modify (add more elifs) as you add more models
 
-if numruns==1 and atmchange==True:
-  if verbiose==1: print('a scary warning about an overflow in the exp might show up when the composite model runs.')
-  if verbiose==1: print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
-  r_imp_array=[]
-  v_imp_array=[]
-  rho_imp_array=[]
-  yimp_array=[]
-  for ind in range(1,numimps+1):
-    r_imp_array.append(impactordictionary[ind][0])
-    v_imp_array.append(impactordictionary[ind][1])
-    rho_imp_array.append(impactordictionary[ind][2])
-    yimp_array.append(impactordictionary[ind][3])
-  runmodels()
-elif numruns==1 and atmchange==False:
-  v_imp_array=[]
-  rho_imp_array=[]
-  yimp_array=[]
-  for r in r_imp_array:
-    v_imp_array.append(v_esc+5)
-    rho_imp_array.append(rho_asteroid)
-    yimp_array.append(asteroidyimp)
-  runmodels()
-else:
-  if verbiose==1: print('a scary warning about an overflow in the exp might show up when the composite model runs.')
-  if verbiose==1: print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
-  pbar = tqdm(total=numruns, desc="Progress for all runs")
-  for numrun in range(1,numruns+1): #this is making r_imp_array a list of lists 
-    if verbiose==1: print('\n')
-    if verbiose==1: print('run number',numrun)
+def multiproc_running_models(run_id):
+    global numrun, r_imp_array, v_imp_array, rho_imp_array, yimp_array
+
+    numrun = run_id
+    r_imp_array = []
+    v_imp_array = []
+    rho_imp_array = []
+    yimp_array = []
+
+    for ind in range(1, numimps + 1):
+        r_imp_array.append(imp_arrays[numrun][ind][0])
+        v_imp_array.append(imp_arrays[numrun][ind][1])
+        rho_imp_array.append(imp_arrays[numrun][ind][2])
+        yimp_array.append(imp_arrays[numrun][ind][3])
+
+    runmodels()
+    return run_id
+
+if __name__ == "__main__":
+  if numruns==1 and atmchange==True:
+    if verbiose==1: print('a scary warning about an overflow in the exp might show up when the composite model runs.')
+    if verbiose==1: print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
     r_imp_array=[]
     v_imp_array=[]
     rho_imp_array=[]
     yimp_array=[]
     for ind in range(1,numimps+1):
-      r_imp_array.append(imp_arrays[numrun][ind][0])
-      v_imp_array.append(imp_arrays[numrun][ind][1])
-      rho_imp_array.append(imp_arrays[numrun][ind][2])
-      yimp_array.append(imp_arrays[numrun][ind][3])
+      r_imp_array.append(impactordictionary[ind][0])
+      v_imp_array.append(impactordictionary[ind][1])
+      rho_imp_array.append(impactordictionary[ind][2])
+      yimp_array.append(impactordictionary[ind][3])
     runmodels()
-    pbar.update(1)
-  pbar.close()
+
+  elif numruns==1 and atmchange==False:
+    v_imp_array=[]
+    rho_imp_array=[]
+    yimp_array=[]
+    for r in r_imp_array:
+      v_imp_array.append(v_esc+5)
+      rho_imp_array.append(rho_asteroid)
+      yimp_array.append(asteroidyimp)
+    runmodels()
+
+  else:
+    if verbiose==1:
+      print('a scary warning about an overflow in the exp might show up when the composite model runs.')
+      print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
+
+    nproc = int(os.environ.get("SLURM_NTASKS", "16"))
+
+    with mp.Pool(processes=nproc) as pool:
+      for _ in tqdm(
+          pool.imap_unordered(multiproc_running_models, range(1, numruns + 1)),
+          total=numruns,
+          desc="Progress for all runs"
+      ):
+        pass
   #quickjump
 
