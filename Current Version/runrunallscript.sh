@@ -19,4 +19,4 @@ conda activate MCenv
 listplanets=('Earth' 'Earth' 'Earth' 'Earth' 'Earth' 'Earth' 'Mars' 'Mars' 'Mars' 'Mars' 'Mars' 'Mars' 'Venus' 'Venus' 'Venus' 'Venus' 'Venus' 'Venus')
 listpressures=(0.006 0.1 0.25 1 10 92.5 0.006 0.1 0.25 1 10 92.5 0.006 0.1 0.25 1 10  92.5)
 
-python v19.py --planet ${listplanets[$SLURM_ARRAY_TASK_ID]} --startingP ${listpressures[$SLURM_ARRAY_TASK_ID]} 
+python v21.py --planet ${listplanets[$SLURM_ARRAY_TASK_ID]} --startingP ${listpressures[$SLURM_ARRAY_TASK_ID]} 
