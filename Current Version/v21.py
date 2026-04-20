@@ -597,6 +597,7 @@ if atmchange==True and numruns==1:
         genimpscounter+=1
     except:
       if verbiose==1: print(randomnum,"is outside the interpolation range, and will convert to an impactor bigger than the sizeupperbound so we'll skip it")
+  randomlychosensizevals = np.asarray(randomlychosensizevals, dtype=float)
 
   r_imp_array=randomlychosensizevals
   if verbiose==1: print(len(r_imp_array))
@@ -641,6 +642,8 @@ if atmchange==True and numruns==1:
         else:
             seen.add(e)
     if verbiose==1: print(h,'repeats')
+
+    crandomlychosenvelovals = np.asarray(crandomlychosenvelovals, dtype=float)
 
     v_imp_array=crandomlychosenvelovals
 
@@ -696,6 +699,8 @@ if atmchange==True and numruns==1:
         else:
             seen.add(e)
     if verbiose==1: print(h,'repeats')
+
+    arandomlychosenvelovals = np.asarray(arandomlychosenvelovals, dtype=float)
 
     v_imp_array=arandomlychosenvelovals
 
@@ -3035,7 +3040,7 @@ if __name__ == "__main__":
       print('a scary warning about an overflow in the exp might show up when the composite model runs.')
       print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
 
-    nproc = int(os.environ.get("SLURM_NTASKS", "16"))
+    nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "16"))
 
     with mp.Pool(processes=nproc) as pool:
       for _ in tqdm(
