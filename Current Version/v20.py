@@ -1280,7 +1280,7 @@ def kerratmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
       m_imp=M_imp(rho_imp,r_imp)
       m_tan=pham_tan_plane_mass(new_atm_m,H)
       m_crit=pham_crit_mass(n,m_tan)
-      M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
+      M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
       m_gain.append(M_gain)
     elif modelforgain=='sec':
       M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
@@ -1343,7 +1343,7 @@ def gaatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgain,
       m_imp=M_imp(rho_imp,r_imp)
       m_tan=pham_tan_plane_mass(new_atm_m,H)
       m_crit=pham_crit_mass(n,m_tan)
-      M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
+      M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
       m_gain.append(M_gain)
     elif modelforgain=='sec':
       M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp,rho_imp)
@@ -1442,7 +1442,7 @@ def svetatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
       m_imp=M_imp(rho_imp,r_imp)
       m_tan=pham_tan_plane_mass(new_atm_m,H)
       m_crit=pham_crit_mass(n,m_tan)
-      M_gain=pham_m_atm_gain(m_imp,m_crit,papereqn=papereqn)
+      M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
       m_gain.append(M_gain)
     elif modelforgain=='sec':
       M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp,rho_imp)
@@ -2076,8 +2076,8 @@ def comprun(papereqn=False):
         Xi=shu_xi(r_imp,H,rho_imp,rho_atm,v_imp,v_esc,rho_tar)
         chi_A=shu_chi_a(Xi)
         Chi_imp=shu_chi_imp(rho_tar,rho_imp,v_imp,v_esc,Xi)
-        gain.append(shu_m_atm_gain(chi_A,m_imp,v_imp,v_esc))
-        loss.append(shu_m_atm_loss(r_imp,rho_imp,Chi_imp))
+        gain.append(shu_m_atm_gain(r_imp,rho_imp,Chi_imp))
+        loss.append(shu_m_atm_loss(chi_A,m_imp,v_imp,v_esc))
       elif model=='ga':
         if gamodelforgain=='pham':
           m_imp=M_imp(rho_imp,r_imp)
