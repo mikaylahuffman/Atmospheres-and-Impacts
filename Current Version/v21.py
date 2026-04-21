@@ -1,4 +1,6 @@
 import multiprocessing as mp
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -30,7 +32,7 @@ parser.add_argument('--planet',
 # startingP=1 #bar
 # planet='Earth'
 
-base_dir = r"/scratch/alpine/mihu1229/MCv7"
+base_dir = r"/scratch/alpine/mihu1229/MCv8"
 # base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps50k"
 
 args = parser.parse_args()
@@ -99,9 +101,10 @@ Dlimforlosschoice=2 #for deniem, swaps between Dlim for loss being H(rho_0/rho_i
 
 medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
-numruns=30
-numimps=int(5e6)
-# numimps=50000
+# numruns=30
+numruns=5
+# numimps=int(5e6)
+numimps=5000
 if verbiose==1:
     print(numimps)
 #quickjump
@@ -884,11 +887,11 @@ median_mass = np.median(total_masses)
 percentiles = np.percentile(total_masses, [25, 75])
 
 # if verbiose==1:
-print(f"Average total impacting mass: {average_mass:.2e} kg")
-print(f"Standard deviation: {std_mass:.2e} kg")
-print(f"Median total mass: {median_mass:.2e} kg")
-print(f"25th percentile: {percentiles[0]:.2e} kg")
-print(f"75th percentile: {percentiles[1]:.2e} kg")
+print("Average total impacting mass:", average_mass, "kg")
+print("Standard deviation:", std_mass,"kg")
+print("Median total mass:",median_mass,"kg")
+print("25th percentile:",percentiles[0],"kg")
+print("75th percentile",percentiles[1],"kg")
 
 #@title savecsv and savepickle functions
 
@@ -939,7 +942,7 @@ def savepickle(modelnickname, losslist, gainlist, deltalist):
             if verbiose == 1:
                 print('Pickle output in kg')
 
-            filename = f"{planet}_{modelnickname}_run{pickle_numrun}.pkl"
+            filename = planet + "_" + modelnickname + "_run" + str(pickle_numrun) + ".pkl"
             filepath = output_dir+'/'+filename
             data = {
                 'Imp Radius (km)': r_imp_array,
@@ -954,7 +957,7 @@ def savepickle(modelnickname, losslist, gainlist, deltalist):
             if verbiose == 1:
                 print('Pickle output in Pa')
 
-            filename = f"{planet}_P0_{startingP}bar_{modelnickname}_run{pickle_numrun}.pkl"
+            filename = planet + "_P0_" + str(startingP) + "bar_" + modelnickname + "_run" + str(pickle_numrun) + ".pkl"
             filepath = output_dir+'/'+filename
             data = {
                 'Imp Radius (km)': r_imp_array,
@@ -969,7 +972,7 @@ def savepickle(modelnickname, losslist, gainlist, deltalist):
         df = pd.DataFrame(data)
 
         # Save DataFrame as a single pickle file
-        print(f"Writing {filepath}", flush=True)
+        print("Writing", {filepath})
         with open(filepath, 'wb') as outFile:
             pickle.dump(df, outFile)
 
@@ -3007,7 +3010,7 @@ def multiproc_running_models(run_id):
         runmodels()
         return run_id
     except Exception as e:
-        print(f"Run {run_id} failed: {e}", flush=True)
+        print("Run",run_id,"failed")
         raise
 
 if __name__ == "__main__":
