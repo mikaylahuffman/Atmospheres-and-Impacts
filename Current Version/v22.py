@@ -102,10 +102,10 @@ Dlimforlosschoice=2 #for deniem, swaps between Dlim for loss being H(rho_0/rho_i
 
 medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
-# numruns=30
-numruns=5
-# numimps=int(5e6)
-numimps=5000
+numruns=30
+# numruns=5
+numimps=int(5e6)
+# numimps=5000
 if verbiose==1:
     print(numimps)
 #quickjump
