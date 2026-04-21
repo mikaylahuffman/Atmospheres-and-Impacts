@@ -77,6 +77,7 @@ fixcompcheckprint=False #prints when you get rid of a gain or loss
 multiplicativebound=100 #works with fixcompcheck. if gain or loss is >starting atm mass*multiplicativebound, then it gets changed to 0
 absolutebound=1e23
 multorabscheck='abs' #mult or abs. if mult, uses multiplicative bound, if abs, uses absolutebound
+fixRochecheck=True #forces mass loss fractions to be b/n 0 & 1
 fixphamcheck=True #decide whether to have 0 gains after m crit (True) or not (False)
 fixsvet07check=True #decide whether to force svetsov 2007's gains to be 0 or + (True)
 fixsvet07check2=False #weirder svet07 check
@@ -363,6 +364,8 @@ def atmmass_to_surfacepressure(radius,atmmass,gravity):
 mass_atm=surfacepressure_to_atmmass(r_planet,startingP*1e5,gravity) #kg
 rho_atm=mass_atm/presentday_atm_m*presentday_rho_atm
 if verbiose==1: print('starting pressure =',atmmass_to_surfacepressure(r_planet,mass_atm,gravity)/100000,'bar')
+
+m_earth= 5.972e24 #kg
 
 #below are constants for the pham model from julia johnston's spring 2023 work
 f_vap=0.55
@@ -1311,6 +1314,151 @@ def kerratmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgai
 
   return m_loss,m_gain,m_tot
 
+#@title Roche 2025 functions
+
+def roche_atm_m_loss(r_imp,atmmass,v_imp,rho_imp):
+  atm_m=atmmass
+  roche_b=np.sin(np.radians(90-angle)) #impact parameter of 0 for head on straight non oblique impacts
+
+  vc=v_imp
+  R_r_t=r_planet
+  R_r_i=r_imp
+  M_r_t=rho_tar*4/3*np.pi*R_r_t**3
+  M_r_i=rho_imp*4/3*np.pi*R_r_i**3
+  M_tot_t=M_r_t+atm_m
+  roche_v_esc=np.sqrt(2*G*(M_tot_t+M_r_i)/(R_r_t+R_r_i))
+
+  roche_gamma=M_r_i/(M_r_i+M_r_t)
+
+  roche_k = np.array([
+      [-643.0, 0.928, -0.241, 643.0, 0.000183, -0.00837],
+      [-817.0, 0.122, -0.106, 817.0, 0.000566,  0.0],
+      [ -0.468, 1.25,  -0.516, 2.47, -4.64,      0.0]
+  ])
+
+  vc_over_vesc = vc/roche_v_esc
+  Mt_over_Mearth = M_tot_t/m_earth
+
+  roche_xi = np.array([
+      roche_k[i,0]
+      + roche_k[i,1]*roche_gamma
+      + roche_k[i,2]*roche_gamma**2
+      + roche_k[i,3]*(vc_over_vesc)**(roche_k[i,4])
+      + roche_k[i,5]*Mt_over_Mearth
+      for i in range(3)
+  ])
+
+  X_NF=roche_xi[0]-roche_xi[1]*(roche_b+roche_xi[2])**2
+
+  if fixRochecheck==True: #we force 1>X_NF>0 following what they do in their supplementary materials
+    xi1_vesc = roche_k[0,0] + roche_k[0,1]*roche_gamma + roche_k[0,2]*roche_gamma**2 + roche_k[0,3] + roche_k[0,5]*Mt_over_Mearth
+    xi2_vesc = roche_k[1,0] + roche_k[1,1]*roche_gamma + roche_k[1,2]*roche_gamma**2 + roche_k[1,3]
+    xi3_vesc = roche_k[2,0] + roche_k[2,1]*roche_gamma + roche_k[2,2]*roche_gamma**2 + roche_k[2,3]
+
+    X_NF_vesc = xi1_vesc - xi2_vesc*(roche_b + xi3_vesc)**2
+
+    X_NF = np.clip(X_NF, max(0.0, X_NF_vesc), 1.0)
+
+  # print("X_NF=",X_NF)
+
+  roche_B=(R_r_t+R_r_i)*roche_b
+
+  if roche_B+R_r_i>R_r_t:
+    roche_l=R_r_t+R_r_i-roche_B
+  else:
+    roche_l=2*R_r_i
+
+  roche_alpha=(3*R_r_i*roche_l**2-roche_l**3)/(4*R_r_i**3)
+  mu_alpha=roche_alpha*(M_r_i*M_tot_t)/(roche_alpha*M_r_i+M_tot_t)
+  mu=(M_r_i*M_tot_t)/(M_r_i+M_tot_t)
+  Q_r=(mu*vc**2)/(2*(M_r_i+M_tot_t))
+
+  Q_prime_r=mu_alpha/mu*Q_r
+
+  roche_s = np.array([
+      [-8150.0, 7894.0, 0.000167, 256.0,     -0.000468],
+      [    1.79,   -1.79, 0.000132, 0.00709, -0.484],
+      [  928.0,  -928.0,  0.00144,  0.0,      0.0],
+      [  -75.0,    -4.25, 1.69,     75.9,     0.0000563]
+  ], dtype=float)
+
+  roche_psi = np.array([
+      roche_s[i,0]
+      + roche_s[i,1] * roche_gamma**(roche_s[i,2])
+      + roche_s[i,3] * (Mt_over_Mearth)**(roche_s[i,4])
+      for i in range(4)
+  ])
+
+  X_FF=roche_psi[0]*np.exp(-roche_psi[1]*Q_prime_r*(1+M_r_i/M_tot_t)*(1-roche_b)**roche_psi[3])+roche_psi[2]
+
+  
+  if fixRochecheck==True:
+      X_FF = np.clip(X_FF, 0.0, 1.0)
+
+  # print("X_FF:", X_FF)
+  
+  X_tot = X_NF + X_FF
+  if fixRochecheck==True:
+      X_tot = np.clip(X_tot, 0.0, 1.0)
+
+  roche_mass_loss=X_tot*atm_m
+  
+  # print('fractional mass loss is',X_tot)
+  # print('for total atm mass loss of',roche_mass_loss,'kg')
+  return(roche_mass_loss)
+
+def rocheloss(r_imp_array,v_imp_array,rho_imp_array,atmmass):
+  m_loss=[]
+  for r_imp,rho_imp, v_imp in zip(r_imp_array,rho_imp_array,v_imp_array):
+    M_loss=roche_atm_m_loss(r_imp,atmmass,v_imp,rho_imp)
+    m_loss.append(M_loss)
+  return fixnegatives(m_loss) #force loss values to be >0
+
+def rochegain(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
+  m_gain=[]
+  for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
+    m_imp=M_imp(rho_imp,r_imp)
+    M_gain=sec_m_gain(m_imp, y_imp, v_imp, r_imp, rho_imp)
+    m_gain.append(M_gain)
+  return fixnegatives(m_gain)
+
+def rocheatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgain,papereqn=ogphamgaineqn,n=None):
+  m_loss,m_gain,m_tot=[],[],[]
+  for r_imp, v_imp, rho_imp, y_imp in zip(r_imp_array,v_imp_array, rho_imp_array, yimp_array):
+    if len(m_loss)==0:
+      new_atm_m=mass_atm
+    else:
+      new_atm_m=m_tot[-1]
+
+    new_rho_atm=new_atm_m/presentday_atm_m*presentday_rho_atm
+    M_loss=roche_atm_m_loss(r_imp,new_atm_m,v_imp,rho_imp)
+    m_loss.append(M_loss)
+
+    if modelforgain=='pham':
+      m_imp=M_imp(rho_imp,r_imp)
+      m_tan=pham_tan_plane_mass(new_atm_m,H)
+      m_crit=pham_crit_mass(n,m_tan)
+      M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
+      m_gain.append(M_gain)
+    elif modelforgain=='sec':
+      M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
+      m_gain.append(M_gain)
+    elif modelforgain=='simp':
+      M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
+      m_gain.append(M_gain)
+    else:
+      if verbiose==1:
+        print('gain model',modelforgain,'not recognized')
+        print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
+
+    newtotalmass=new_atm_m+M_gain-M_loss
+    if newtotalmass<0:
+      m_tot.append(0.)
+    else:
+      m_tot.append(newtotalmass)
+
+  return m_loss,m_gain,m_tot
+
 #@title Genda & Abe functions
 
 #using eqn 11 from de Niem 2012 for the loss
@@ -2006,6 +2154,9 @@ if 'ga' in mods.Nickname.values:
 if 'kerr' in mods.Nickname.values:
   kerrindex=int(mods[mods['Nickname'] == 'kerr'].index[0])
   kerrmodelforgain=str(mods['Gain Model'][kerrindex])
+if 'roche' in mods.Nickname.values:
+  rocheindex=int(mods[mods['Nickname'] == 'roche'].index[0])
+  rochemodelforgain=str(mods['Gain Model'][rocheindex])
 
 def compsetup():
   global compns_M_loss; global compns_M_gain;global comps_M_loss; global comps_M_gain; global sizeregimes; global compdict; global r_imp_array; global v_imp_array; global rho_imp_array; global yimp_array
@@ -2121,9 +2272,29 @@ def comprun(papereqn=False):
           gain.append(M_gain)
         else:
           if verbiose==1:
-            print('gain model',gamodelforgain,'not recognized')
+            print('gain model',kerrmodelforgain,'not recognized')
             print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
         loss.append(kerr_m_atm_loss(r_planet,r_imp,bulkdensity,rho_imp,v_imp,mass_atm))
+      
+      elif model=='roche':
+        if rochemodelforgain=='pham':
+          m_imp=M_imp(rho_imp,r_imp)
+          m_tan=pham_tan_plane_mass(mass_atm,H)
+          m_crit=pham_crit_mass(n,m_tan)
+          M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
+          gain.append(M_gain)
+        elif rochemodelforgain=='sec':
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
+          gain.append(M_gain)
+        elif rochemodelforgain=='simp':
+          M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
+          gain.append(M_gain)
+        else:
+          if verbiose==1:
+            print('gain model',rochemodelforgain,'not recognized')
+            print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
+        loss.append(roche_atm_m_loss(r_imp,mass_atm,v_imp,rho_imp))
+
       else:
         if verbiose==1:
           print('model nickname',model,'not recognized')
@@ -2376,6 +2547,34 @@ def compatmchangerun(papereqn=False):
             print('gain model',kerrmodelforgain,'not recognized')
             print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
         M_loss=kerr_m_atm_loss(r_planet,r_imp,bulkdensity,rho_imp,v_imp,new_atm_m)
+        if fixcompcheck==True:
+            M_loss=fixit(new_atm_m,M_loss,gainorloss='loss',model='kerr')
+        loss.append(M_loss)
+
+      elif model=='roche':
+        if rochemodelforgain=='pham':
+          m_imp=M_imp(rho_imp,r_imp)
+          m_tan=pham_tan_plane_mass(new_atm_m,H)
+          m_crit=pham_crit_mass(n,m_tan)
+          M_gain=pham_m_atm_gain(m_imp,m_crit,y_imp,papereqn=papereqn)
+          if fixcompcheck==True:
+            M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
+          gain.append(M_gain)
+        elif rochemodelforgain=='sec':
+          M_gain=sec_m_gain(M_imp(rho_imp,r_imp),y_imp,v_imp,r_imp, rho_imp)
+          if fixcompcheck==True:
+            M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
+          gain.append(M_gain)
+        elif rochemodelforgain=='simp':
+          M_gain=simp_m_atm_gain(rho_imp,r_imp,y_imp)
+          if fixcompcheck==True:
+            M_gain=fixit(new_atm_m,M_gain,gainorloss='gain',model='ga')
+          gain.append(M_gain)
+        else:
+          if verbiose==1:
+            print('gain model',rochemodelforgain,'not recognized')
+            print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
+        M_loss=roche_atm_m_loss(r_imp,new_atm_m,v_imp,rho_imp)
         if fixcompcheck==True:
             M_loss=fixit(new_atm_m,M_loss,gainorloss='loss',model='kerr')
         loss.append(M_loss)
@@ -2820,6 +3019,63 @@ def kerrrun():
       if verbiose==1:print('output units',outputdataunits,'not recognized')
       if verbiose==1:print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
 
+def rocherun():
+  global r_imp_array; global v_imp_array; global rho_imp_array; global yimp_array; global n;global j;global roche_M_loss; global roche_delta_M; global roche_M_gain; global kerr_M_loss; global kerr_delta_M;global kerr_M_gain;global shu_M_loss;global shu_M_gain;global pham10_M_loss;global pham10_M_gain;global pham2400_M_loss;global pham2400_M_gain;global pham10_corresponding_crit_imp_r;global pham2400_corresponding_crit_imp_r;global pham10_delta_M;global pham2400_delta_M;global shu_delta_M;global ga_M_loss;global ga_M_gain;global ga_delta_M;global ga_corresponding_crit_imp_r;global svet_M_loss;global svet_M_gain;global svet_delta_M;global svet07_M_loss;global svet07_M_gain;global svet07_delta_M;global shu_P_loss;global shu_P_gain;global pham10_P_loss;global pham10_P_gain;global pham2400_P_loss;global pham2400_P_gain;global pham10_delta_P;global pham2400_delta_P;global shu_delta_P;global kerr_P_loss; global kerr_P_gain; global kerr_delta_P;global ga_P_loss;global ga_P_gain;global ga_delta_P;global ga_m_crit;global svet_P_loss;global svet_P_gain;global svet_delta_P;global svet07_P_loss;global svet07_P_gain;global svet07_delta_P
+  modelforgain=str(mods['Gain Model'][j])
+  if modelforgain=='pham': roche_n=float(mods['n'][j])
+  else: roche_n=0.
+
+  if atmchange==True:
+    roche_M_loss,roche_M_gain,roche_delta_M=rocheatmchange(r_imp_array,v_imp_array, rho_imp_array, yimp_array,modelforgain,papereqn=ogphamgaineqn,n=roche_n)
+    if outputdataunits=='pressure':
+      roche_P_loss=pressurearray(roche_M_loss,r_planet,gravity)
+      roche_P_gain=pressurearray(roche_M_gain,r_planet,gravity)
+      roche_delta_P=pressurearray(roche_delta_M,r_planet,gravity)
+      savecsv('roche',roche_P_loss,roche_P_gain,roche_delta_P)
+      savepickle('roche',roche_P_loss,roche_P_gain,roche_delta_P)
+    elif outputdataunits=='mass':
+      savecsv('roche',roche_M_loss,roche_M_gain,roche_delta_M)
+      savepickle('roche',roche_M_loss,roche_M_gain,roche_delta_M)
+    else:
+      if verbiose==1:
+        print('output units',outputdataunits,'not recognized')
+        print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
+
+  else:
+    roche_M_loss=rocheloss(r_imp_array,v_imp_array,rho_imp_array,mass_atm)
+    
+    #implementing different gain models
+    if modelforgain=='pham':
+      if verbiose==1:print('gain model used is',modelforgain)
+      roche_M_gain=rochegain(r_imp_array,v_imp_array, rho_imp_array, yimp_array,mass_atm,H,r_planet,roche_n,y_imp,f_vap)
+      roche_m_crit=pham_crit_mass(roche_n,pham_tan_plane_mass(mass_atm,H))
+      roche_corresponding_crit_imp_r=(3*roche_m_crit/(4*np.pi*rho_imp))**(1/3)
+    elif modelforgain=='sec':
+      if verbiose==1:print('gain model used is',modelforgain)
+      roche_M_gain=secgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array)
+    elif modelforgain=='simp':
+      if verbiose==1:print('gain model used is',modelforgain)
+      roche_M_gain=simpgain(r_imp_array,v_imp_array, rho_imp_array, yimp_array)
+    else:
+      if verbiose==1:print('gain model',modelforgain,'not recognized')
+      if verbiose==1:print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
+    roche_delta_M=np.asarray(roche_M_gain)-np.asarray(roche_M_loss)
+    if outputdataunits=='pressure':
+      roche_P_loss=pressurearray(roche_M_loss,r_planet,gravity)
+      roche_P_gain=pressurearray(roche_M_gain,r_planet,gravity)
+      roche_delta_P=pressurearray(roche_delta_M,r_planet,gravity)
+      savecsv('roche',roche_P_loss,roche_P_gain,roche_delta_P)
+      savepickle('roche',roche_P_loss,roche_P_gain,roche_delta_P)
+    elif outputdataunits=='mass':
+      savecsv('roche',roche_M_loss,roche_M_gain,roche_delta_M)
+      savepickle('roche',roche_M_loss,roche_M_gain,roche_delta_M)
+    else:
+      if verbiose==1:print('output units',outputdataunits,'not recognized')
+      if verbiose==1:print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
+
+
+
+
 def svetrun():
   global r_imp_array; global v_imp_array; global rho_imp_array; global yimp_array; global n;global j;global shu_M_loss;global shu_M_gain;global pham10_M_loss;global pham10_M_gain;global pham2400_M_loss;global pham2400_M_gain;global pham10_corresponding_crit_imp_r;global pham2400_corresponding_crit_imp_r;global pham10_delta_M;global pham2400_delta_M;global shu_delta_M;global ga_M_loss;global ga_M_gain;global ga_delta_M;global ga_corresponding_crit_imp_r;global svet_M_loss;global svet_M_gain;global svet_delta_M;global svet07_M_loss;global svet07_M_gain;global svet07_delta_M;global shu_P_loss;global shu_P_gain;global pham10_P_loss;global pham10_P_gain;global pham2400_P_loss;global pham2400_P_gain;global pham10_delta_P;global pham2400_delta_P;global shu_delta_P;global ga_P_loss;global ga_P_gain;global ga_delta_P;global ga_m_crit;global svet_P_loss;global svet_P_gain;global svet_delta_P;global svet07_P_loss;global svet07_P_gain;global svet07_delta_P; global svet_m_crit; global svet_corresponding_crit_imp_r
   modelforgain=str(mods['Gain Model'][j])
@@ -2915,7 +3171,7 @@ def svet07run():
 
 #@title run models function
 def runmodels(): #doing globals like this ain't great coding habits
-  global compwithsvet07check; global sizeregimes; global r_imp_array; global v_imp_array; global rho_imp_array; global yimp_array; global n;global j;global deniem_M_loss; global deniem_M_gain; global hilke_M_loss; global hilke_M_gain; global shu_M_loss;global shu_M_gain;global pham10_M_loss;global pham10_M_gain;global pham2400_M_loss;global pham2400_M_gain;global pham10_corresponding_crit_imp_r;global pham2400_corresponding_crit_imp_r;global pham10_delta_M; global hilke_delta_M;global pham2400_delta_M;global shu_delta_M;global kerr_M_loss;global kerr_M_gain; global kerr_delta_M;global ga_M_loss;global ga_M_gain;global ga_delta_M;global ga_corresponding_crit_imp_r;global svet_M_loss;global svet_M_gain;global svet_delta_M;global svet07_M_loss;global svet07_M_gain;global svet07_delta_M;global shu_P_loss;global shu_P_gain; global deniem_P_gain; global deniem_P_loss; global hilke_P_gain; global pham10_P_loss;global pham10_P_gain;global hilke_P_loss;global pham2400_P_loss;global pham2400_P_gain;global pham10_delta_P;global deniem_delta_P; global deniem_delta_M;global hilke_delta_P;global pham2400_delta_P;global shu_delta_P;global kerr_P_loss; global kerr_P_gain; global kerr_delta_P; global kerr_m_crit;global ga_P_loss;global ga_P_gain;global ga_delta_P;global ga_m_crit;global svet_P_loss;global svet_P_gain;global svet_delta_P;global svet07_P_loss;global svet07_P_gain;global svet07_delta_P
+  global compwithsvet07check; global sizeregimes; global r_imp_array; global v_imp_array; global rho_imp_array; global yimp_array; global n;global j;global deniem_M_loss; global deniem_M_gain; global hilke_M_loss; global hilke_M_gain; global shu_M_loss;global shu_M_gain;global pham10_M_loss;global pham10_M_gain;global pham2400_M_loss;global pham2400_M_gain;global pham10_corresponding_crit_imp_r;global pham2400_corresponding_crit_imp_r;global pham10_delta_M; global hilke_delta_M;global pham2400_delta_M;global shu_delta_M;global kerr_M_loss;global kerr_M_gain; global kerr_delta_M;global ga_M_loss;global ga_M_gain;global ga_delta_M;global ga_corresponding_crit_imp_r;global svet_M_loss;global svet_M_gain;global svet_delta_M;global svet07_M_loss;global svet07_M_gain;global svet07_delta_M;global shu_P_loss;global shu_P_gain; global deniem_P_gain; global deniem_P_loss; global hilke_P_gain; global pham10_P_loss;global pham10_P_gain;global hilke_P_loss;global pham2400_P_loss;global pham2400_P_gain;global pham10_delta_P;global deniem_delta_P; global deniem_delta_M;global hilke_delta_P;global pham2400_delta_P;global shu_delta_P;global kerr_P_loss; global kerr_P_gain; global kerr_delta_P; global kerr_m_crit;global ga_P_loss;global ga_P_gain;global ga_delta_P;global ga_m_crit;global svet_P_loss;global svet_P_gain;global svet_delta_P;global svet07_P_loss;global svet07_P_gain;global svet07_delta_P;global roche_P_loss; global roche_P_gain; global roche_delta_P; global roche_m_crit;global roche_M_loss; global roche_M_gain; global roche_delta_M
   for j in range(len(mods['Model Name'])):
     if mods['Model Name'][j]=='Pham':
       if verbiose==1: print('running',mods['Model Name'][j],'(n='+str(mods['n'][j])+')')
@@ -2941,6 +3197,11 @@ def runmodels(): #doing globals like this ain't great coding habits
     elif mods['Model Name'][j]=='Kegerreis':
       if verbiose==1: print('running',mods['Model Name'][j],'(n='+str(mods['n'][j])+')')
       kerrrun()
+      if verbiose==1: print('done')
+    
+    elif mods['Model Name'][j]=='Roche':
+      if verbiose==1: print('running',mods['Model Name'][j],'(n='+str(mods['n'][j])+')')
+      rocherun()
       if verbiose==1: print('done')
 
     elif  mods['Model Name'][j]=='Svetsov 2000':
