@@ -26,4 +26,4 @@ echo "Planet: ${listplanets[$SLURM_ARRAY_TASK_ID]}"
 echo "Starting pressure: ${listpressures[$SLURM_ARRAY_TASK_ID]}"
 echo "Using ${SLURM_NTASKS} worker processes"
 
-python v21.py --planet "${listplanets[$SLURM_ARRAY_TASK_ID]}" --startingP "${listpressures[$SLURM_ARRAY_TASK_ID]}"
+python v22.py --planet "${listplanets[$SLURM_ARRAY_TASK_ID]}" --startingP "${listpressures[$SLURM_ARRAY_TASK_ID]}"
