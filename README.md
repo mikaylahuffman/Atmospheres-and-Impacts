@@ -1,6 +1,6 @@
 # Atmospheres and Impacts
-Atmospheres and Impacts work 2022-2025
+Atmospheres and Impacts work 2022-2026
 
-The work included in this repository was written from 2022-2025 as part of Mikayla Huffman's master thesis work at CU Boulder in the APS department. If you have any questions, please contact me at mikaylarhuffman@gmail.com. I apologize for subpar comments, code quality, computing efficiency, etc. 
+The work included in this repository was written from 2022-2026 as part of Mikayla Huffman's master thesis work at CU Boulder in the APS department. If you have any questions, please contact me at mikaylarhuffman@gmail.com. I apologize for subpar comments, code quality, computing efficiency, etc. 
 
 The folder "Old Versions" has some samples of older versions of the code and the .csv model file. Current version of the code is in the "Current Version" folder. I have included any .sh scripts for the .py scripts I was running on CU's supercomputer, Alpine. Running the most recent version of the code will generate a file structure of planet/starting pressure pairs with .pkl files for each run. You specify the planets and starting pressures in the .sh file, then can edit constants and flags in the .py file. 
