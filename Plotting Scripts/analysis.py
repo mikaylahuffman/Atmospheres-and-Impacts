@@ -21,7 +21,7 @@ mpl.rcParams.update({
 # === Settings ===
 verbiose = 0
 # base_dir = r"D:\paperruns\MC"
-base_dir = r"/scratch/alpine/mihu1229/MCv3"
+base_dir = r"/scratch/alpine/mihu1229/MCv8"
 planets = ['Earth', 'Mars', 'Venus']
 pressures = [0.006, 0.1, 0.25, 1.0, 10.0, 92.5]
 initial_pressures = {p: p * 1e5 for p in pressures}
@@ -32,6 +32,7 @@ model_labels = {
     "pham250": "Pham n=250",
     "shu": "Shuvalov",
     "ga": "Genda & Abe",
+    "roche": "Roche",
     "svet": "Svetsov 2000",
     "svet07": "Svetsov 2007",
     "hilke": "Schlichting",
@@ -40,16 +41,16 @@ model_labels = {
     "compns": "Composite without Svetsov 2007"
 }
 model_colors = {
-    "kerr": "darkturquoise",
-    "pham250": "darkgreen",
-    "shu": "limegreen",
-    "ga": "cornflowerblue",
-    "svet": "blue",
-    "svet07": "darkviolet",
-    "hilke": "firebrick",
-    "deniem": "pink",
-    "comps": "gray",
-    "compns": "black"
+    'pham250': 'darkgreen',
+    'shu'    : 'limegreen',
+    'kerr'   : 'darkturquoise',
+    'ga'     : 'cornflowerblue',
+    'roche'  : 'blue',
+    'svet'   : 'darkviolet',
+    'svet07' : 'pink',
+    'comps'  : 'black',
+    'hilke'  : 'gray',
+    'deniem' : 'firebrick'
 }
 
 # === Data Storage ===

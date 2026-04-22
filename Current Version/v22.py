@@ -16,28 +16,36 @@ from tqdm import tqdm
 import os
 import argparse
 
-parser = argparse.ArgumentParser(description='')
-parser.add_argument('--startingP',
-                    dest='startingP',
-                    type=float,
-                    help='Starting pressure in bars.',
-                    required=True)
+multirun=False #True= use multiple CPUs to run
+runlocal=True #True= running on like your laptop, False= on a supercomputer cluster
 
-parser.add_argument('--planet',
-                    dest='planet',
-                    type=str,
-                    help='Which planet to use (Venus, Earth, Mars).',
-                    required=True)
+if runlocal==False:
+  parser = argparse.ArgumentParser(description='')
+  parser.add_argument('--startingP',
+                      dest='startingP',
+                      type=float,
+                      help='Starting pressure in bars.',
+                      required=True)
 
-# startingP=1 #bar
-# planet='Earth'
+  parser.add_argument('--planet',
+                      dest='planet',
+                      type=str,
+                      help='Which planet to use (Venus, Earth, Mars).',
+                      required=True)
 
-base_dir = r"/scratch/alpine/mihu1229/MCv8"
-# base_dir = r"C:/Users/mihu1229/Desktop/is_svet_and_comps_still_stocha/numimps50k"
 
-args = parser.parse_args()
-planet=args.planet
-startingP=args.startingP
+
+if runlocal==False: base_dir = r"/scratch/alpine/mihu1229/MCv8"
+if runlocal==True: base_dir = r"C:/Users/mihu1229/Desktop/plottingtests"
+
+if runlocal==False: args = parser.parse_args()
+
+if runlocal==True:
+  startingP=1 #bar
+  planet='Earth'
+if runlocal==False:
+  planet=args.planet
+  startingP=args.startingP
 
 if startingP==1: #this is bad coding practice lol
   stringstartingP=int(1)
@@ -54,8 +62,8 @@ if not os.path.exists(output_dir):
 justloadingindata=False
 verbiose=0 #0 means very little printing/plotting, 1 means more printing/plotting
 
-mods=pd.read_csv('/projects/mihu1229/MC/models18.csv')
-# mods=pd.read_csv('C:/Users/mihu1229/Documents/GitHub/Atmospheres-and-Impacts/Current Version/models18.csv')
+if runlocal==False: mods=pd.read_csv('/projects/mihu1229/MC/models18.csv')
+if runlocal==True: mods=pd.read_csv('C:/Users/mihu1229/Documents/GitHub/Atmospheres-and-Impacts/Current Version/models18.csv')
 # display(mods)
 
 if verbiose==1:
@@ -102,10 +110,10 @@ Dlimforlosschoice=2 #for deniem, swaps between Dlim for loss being H(rho_0/rho_i
 
 medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
-numruns=30
-# numruns=5
-numimps=int(5e6)
-# numimps=5000
+# numruns=30
+numruns=5
+# numimps=int(5e6)
+numimps=5000
 if verbiose==1:
     print(numimps)
 #quickjump
@@ -3304,14 +3312,32 @@ if __name__ == "__main__":
       print('a scary warning about an overflow in the exp might show up when the composite model runs.')
       print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
 
-    nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "16"))
+    if multirun:
+      nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "16"))
 
-    with mp.Pool(processes=nproc) as pool:
-      for _ in tqdm(
-          pool.imap_unordered(multiproc_running_models, range(1, numruns + 1)),
-          total=numruns,
-          desc="Progress for all runs"
-      ):
-        pass
+      with mp.Pool(processes=nproc) as pool:
+        for _ in tqdm(
+            pool.imap_unordered(multiproc_running_models, range(1, numruns + 1)),
+            total=numruns,
+            desc="Progress for all runs"
+        ):
+          pass
+    else:
+      pbar = tqdm(total=numruns, desc="Progress for all runs")
+      for numrun in range(1,numruns+1): #this is making r_imp_array a list of lists 
+        if verbiose==1: print('\n')
+        if verbiose==1: print('run number',numrun)
+        r_imp_array=[]
+        v_imp_array=[]
+        rho_imp_array=[]
+        yimp_array=[]
+        for ind in range(1,numimps+1):
+          r_imp_array.append(imp_arrays[numrun][ind][0])
+          v_imp_array.append(imp_arrays[numrun][ind][1])
+          rho_imp_array.append(imp_arrays[numrun][ind][2])
+          yimp_array.append(imp_arrays[numrun][ind][3])
+        runmodels()
+        pbar.update(1)
+      pbar.close()
   #quickjump
 
