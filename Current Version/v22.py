@@ -408,7 +408,7 @@ G=6.6743*10**-20 #km^3 kg^-1 s^-2 grav const
 randomseed=80303
 np.random.seed(randomseed)
 size_lowerbound=0.3
-size_upperbound=1000.
+size_upperbound=5000.
 
 r_imp_array=np.logspace(np.log10(size_lowerbound),np.log10(size_upperbound),numimps)
 
@@ -592,7 +592,7 @@ if atmchange==True:
   sizecdf=[]
   for r in np.logspace(np.log10(size_lowerbound),np.log10(size_upperbound),2000):
     sizecdf.append(integrator(integrationpowerlaw,size_lowerbound,r))
-  # r_imp_array[-1]=size_upperbound #the cdf --> 1 as x --> inf. This is an issue. these commented out lines would just make the last coordinate pair in our cdf array (1000,1), which means that anytime we would generate an impactor bigger than sizeupperbound, it would change it artifically to that sizeupperbound. instead, in version 13 and later, we just throw out those impactors larger than sizeupperbound and move on to the next generated number
+  # r_imp_array[-1]=size_upperbound #the cdf --> 1 as x --> inf. This is an issue. these commented out lines would just make the last coordinate pair in our cdf array (5000,1), which means that anytime we would generate an impactor bigger than sizeupperbound, it would change it artifically to that sizeupperbound. instead, in version 13 and later, we just throw out those impactors larger than sizeupperbound and move on to the next generated number
   # sizecdf[-1]=1.
 
   sizeicdf_interp = interp1d(sizecdf, np.logspace(np.log10(size_lowerbound),np.log10(size_upperbound),2000))
