@@ -41,8 +41,8 @@ if runlocal==True: base_dir = r"C:/Users/mihu1229/Desktop/plottingtests"
 if runlocal==False: args = parser.parse_args()
 
 if runlocal==True:
-  startingP=1 #bar
-  planet='Earth'
+  startingP=92.5 #bar
+  planet='Venus'
 if runlocal==False:
   planet=args.planet
   startingP=args.startingP

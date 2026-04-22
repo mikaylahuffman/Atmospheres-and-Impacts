@@ -26,9 +26,9 @@ mpl.rcParams.update({
 # === Configuration ===
 verbiose = 0
 planet_dirs = {
-    'Venus': '/scratch/alpine/mihu1229/MCv3/Venus_92.5',
-    'Earth': '/scratch/alpine/mihu1229/MCv3/Earth_1',
-    'Mars': '/scratch/alpine/mihu1229/MCv3/Mars_0.006'
+    'Venus': 'C:/Users/mihu1229/Desktop/plottingtests/Venus_92.5',#/scratch/alpine/mihu1229/MCv8/Venus_92.5',
+    'Earth': 'C:/Users/mihu1229/Desktop/plottingtests/Earth_1',
+    'Mars': 'C:/Users/mihu1229/Desktop/plottingtests/Mars_0.006'
 }
 starting_pressures = {'Venus': 92.5e5, 'Earth': 1.0e5, 'Mars': 0.006e5}  # Pa
 conversionfactor = 1e6
@@ -39,32 +39,32 @@ low_alpha = 0.1
 plot_stride = 10  # downsample plotting arrays to avoid OverflowError
 
 model_colors = {
-    'pham': 'darkgreen',
     'pham250': 'darkgreen',
-    'shu': 'limegreen',
-    'kerr': 'darkturquoise',
-    'ga': 'cornflowerblue',
-    'svet': 'blue',
-    'svet07': 'darkviolet',
-    'compns': 'black',
-    'comps': 'gray',
-    'hilke': 'firebrick',
-    'deniem': 'pink'
+    'shu'    : 'limegreen',
+    'kerr'   : 'darkturquoise',
+    'ga'     : 'cornflowerblue',
+    'roche'  : 'blue',
+    'svet'   : 'darkviolet',
+    'svet07' : 'pink',
+    'comps'  : 'black',
+    'hilke'  : 'gray',
+    'deniem' : 'firebrick'
 }
 model_labels = {
-    'pham': 'Pham n=250',
+    # 'pham': 'Pham n=250',
     'pham250': 'Pham n=250',
     'shu': 'Shuvalov',
     'kerr': 'Kegerreis',
     'ga': 'Genda & Abe',
+    'roche': 'Roche',
     'svet': 'Svetsov 2000',
     'svet07': 'Svetsov 2007',
     'hilke': 'Schlichting',
     'deniem': 'de Niem',
     'comps': 'Composite with Svetsov 2007',
-    'compns': 'Composite without Svetsov 2007'
+    # 'compns': 'Composite without Svetsov 2007'
 }
-excluded_from_fig1 = {'hilke', 'deniem', 'comps', 'compns'}
+excluded_from_fig1 = {'hilke', 'deniem', 'comps'}#, 'compns'}
 
 # === Load or Compute Medians ===
 processed = {}
@@ -146,7 +146,7 @@ model_hatches = {
 def make_subplot(ax, planet, modeldata, title, zoom=False, comps_only=False):
     spress = starting_pressures[planet]
     for model, (med, p25, p75) in modeldata.items():
-        if comps_only and model not in ['hilke', 'deniem', 'comps', 'compns']:
+        if comps_only and model not in ['hilke', 'deniem', 'comps']: #, 'compns']
             alpha = low_alpha
         elif not comps_only and model in excluded_from_fig1:
             continue

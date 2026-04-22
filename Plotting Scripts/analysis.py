@@ -20,25 +20,26 @@ mpl.rcParams.update({
 
 # === Settings ===
 verbiose = 0
-# base_dir = r"D:\paperruns\MC"
-base_dir = r"/scratch/alpine/mihu1229/MCv8"
+base_dir = r"C:/Users/mihu1229/Desktop/plottingtests"
+output_dir = base_dir
+# base_dir = r"/scratch/alpine/mihu1229/MCv8"
 planets = ['Earth', 'Mars', 'Venus']
 pressures = [0.006, 0.1, 0.25, 1.0, 10.0, 92.5]
 initial_pressures = {p: p * 1e5 for p in pressures}
 pressure_dir_strs = {p: str(p).rstrip('0').rstrip('.') if '.' in str(p) else str(p) for p in pressures}
 pressure_file_strs = {p: str(p) for p in pressures}
 model_labels = {
-    "kerr": "Kegerreis",
     "pham250": "Pham n=250",
     "shu": "Shuvalov",
+    "kerr": "Kegerreis",
     "ga": "Genda & Abe",
     "roche": "Roche",
     "svet": "Svetsov 2000",
     "svet07": "Svetsov 2007",
+    "comps": "Composite",
     "hilke": "Schlichting",
-    "deniem": "de Niem",
-    "comps": "Composite with Svetsov 2007",
-    "compns": "Composite without Svetsov 2007"
+    "deniem": "de Niem"    
+    # "compns": "Composite without Svetsov 2007"
 }
 model_colors = {
     'pham250': 'darkgreen',
@@ -96,10 +97,11 @@ for planet in planets:
                         final_pressure = df['Running Total Atm P (Pa)'].iloc[-1] if 'Running Total Atm P (Pa)' in df.columns else None
                         if final_pressure is not None:
                             model_data[model].append((planet, initial_pressures[pressure], final_pressure))
-
-                    # Special case: compns, pressure=0.1 bar
-                    if model == 'compns' and np.isclose(pressure, 0.1):
+     
+                    # Special case: comps, pressure=0.1 bar
+                    if model == 'comps' and np.isclose(pressure, 0.1):
                         if planet == 'Earth':
+                  
                             asteroids['Earth'].append(df[df['Imp Volatile Mass Fraction'] == 0.02])
                             comets['Earth'].append(df[df['Imp Volatile Mass Fraction'] == 0.2])
 
@@ -115,6 +117,7 @@ for planet in planets:
 
                         total_mass = np.sum(masses)
                         planet_masses[planet.lower()].append(total_mass)
+
 
                 except Exception as e:
                     print(f"Error loading {file}: {e}")
@@ -167,7 +170,7 @@ def plot_histogram_with_pdf(ax, data, pdf_func, title, xlabel, logcheck=False):
     x = np.logspace(np.log10(data.min()), np.log10(data.max()), 1000) if logcheck else np.linspace(data.min(), data.max(), 1000)
     y = pdf_func(x)
     
-    y = y / np.trapz(y, x)
+    y = y / np.trapezoid(y, x)
 
     ax.plot(x, y, label='PDF', color='black')
     ax.set_title(title)
@@ -196,9 +199,9 @@ plot_histogram_with_pdf(axs1[1, 1], earth_comets_df['Imp Velocity (km/s)'], pdf_
 
 plt.tight_layout()
 if verbiose!=0: plt.show()
-fig1.savefig("imps.png", dpi=600)
-fig1.savefig("imps.pdf")
-fig1.savefig("imps.svg")
+fig1.savefig(os.path.join(output_dir, "imps.png"), dpi=600)
+fig1.savefig(os.path.join(output_dir, "imps.pdf"))
+fig1.savefig(os.path.join(output_dir, "imps.svg"))
 
 # === Print Mass Statistics ===
 for planet in ['venus', 'earth', 'mars']:
@@ -275,9 +278,9 @@ def plot_foveri_composites(model_data):
         plt.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), borderaxespad=0)
         plt.tight_layout()
         if verbiose!=0: plt.show()
-        plt.savefig(f"{planet}changingp.png", dpi=600)
-        plt.savefig(f"{planet}changingp.pdf")
-        plt.savefig(f"{planet}changingp.svg")
+        plt.savefig(os.path.join(output_dir, f"{planet}changingp.png"), dpi=600)
+        plt.savefig(os.path.join(output_dir, f"{planet}changingp.pdf"))
+        plt.savefig(os.path.join(output_dir, f"{planet}changingp.svg"))
 
 def extract_composite_by_planet(model_data, model_key):
     composite_data = {}
@@ -327,15 +330,15 @@ def plot_foveri_composite_results(planet_data, title):
     plt.legend()
     plt.tight_layout()
     if verbiose!=0: plt.show()
-    plt.savefig(f"{title}.png", dpi=600)
-    plt.savefig(f"{title}.pdf")
-    plt.savefig(f"{title}.svg")
+    plt.savefig(os.path.join(output_dir,f"{title}.png"), dpi=600)
+    plt.savefig(os.path.join(output_dir,f"{title}.pdf"))
+    plt.savefig(os.path.join(output_dir,f"{title}.svg"))
 
 # === Run Pressure Plots ===
 plot_foveri_composites(model_data)
 
-composite_no_svet = extract_composite_by_planet(model_data, "compns")
+# composite_no_svet = extract_composite_by_planet(model_data, "compns")
 composite_with_svet = extract_composite_by_planet(model_data, "comps")
 
-plot_foveri_composite_results(composite_no_svet, "Composite Model (Without Svetsov 2007)")
-plot_foveri_composite_results(composite_with_svet, "Composite Model (With Svetsov 2007)")
+# plot_foveri_composite_results(composite_no_svet, "Composite Model (Without Svetsov 2007)")
+plot_foveri_composite_results(composite_with_svet, "Composite Model")
