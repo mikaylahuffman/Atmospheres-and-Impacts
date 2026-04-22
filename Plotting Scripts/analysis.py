@@ -622,14 +622,15 @@ def plot_foveri_composite_results(planet_data, title):
     plt.savefig(os.path.join(output_dir, f"{title}.svg"))
 
 # === Plot Preferred Impactor Size Ranges ===
+sizemaxformodels=2e4
 sizeregimes = {
-    'pham':   [0.05, 5000.0],
+    'pham':   [0.05, 9900],
     'shu':    [1.0, 30.0],
-    'ga':     [3840.0, 5000.0],
-    'kerr':   [3000.0, 5000.0],
+    'ga':     [3190, 3590],
+    'kerr':   [3000.0, 7350],
     'svet':   [0.05, 0.5],
     'svet07': [0.05, 5.0],
-    'roche':  [3750.0, 5000.0]
+    'roche':  [3750.0, 9900]
 }
 
 def plot_size_regimes(output_dir):
@@ -646,13 +647,13 @@ def plot_size_regimes(output_dir):
 
     # vertical positions for the labeled line segments
     y_positions = {
-        'svet07': 7,
-        'svet':   6,
+        'svet07': 5,
+        'svet':   4,
         'roche':   5,
         'ga':     4,
         'kerr':  3,
-        'shu':    2,
-        'pham':   1
+        'shu':    3,
+        'pham':   2
     }
 
     fig, ax = plt.subplots(figsize=(9, 3.2))
@@ -681,7 +682,7 @@ def plot_size_regimes(output_dir):
 
     # dashed line for the impactor size range used in this work
     used_min, used_max = 0.3, 5000.0
-    y_used = 0.25
+    y_used = 1
     ax.hlines(
         y_used, used_min, used_max,
         color='black',
@@ -698,8 +699,8 @@ def plot_size_regimes(output_dir):
     )
 
     ax.set_xscale('log')
-    ax.set_xlim(0.03, 7000)
-    ax.set_ylim(-0.1, 6.9)
+    ax.set_xlim(0.03, sizemaxformodels*1.2)
+    ax.set_ylim(0, 6)
     ax.set_xlabel('Impactor Radius (km)')
     ax.set_yticks([])
 

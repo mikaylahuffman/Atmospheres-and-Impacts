@@ -3224,7 +3224,15 @@ def runmodels(): #doing globals like this ain't great coding habits
 
     elif mods['Model Name'][j]=='Composite with Svetsov 2007':
       if verbiose==1: print('running',mods['Model Name'][j])
-      sizeregimes={'pham':[0.05,5000.], 'shu': [1.,30.], 'ga': [3840.,5000.], 'kerr': [3000.,5000.], 'svet': [0.05,0.5], 'svet07': [0.05,5.], 'roche': [3750.,5000.]}
+      sizeregimes = {
+          'pham':   [0.05, 9900],
+          'shu':    [1.0, 30.0],
+          'ga':     [3190, 3590],
+          'kerr':   [3000.0, 7350],
+          'svet':   [0.05, 0.5],
+          'svet07': [0.05, 5.0],
+          'roche':  [3750.0, 9900]
+      }
       if verbiose==1: print(sizeregimes)
       compwithsvet07check=True
       compsetup()
@@ -3236,7 +3244,15 @@ def runmodels(): #doing globals like this ain't great coding habits
 
     elif mods['Model Name'][j]=='Composite without Svetsov 2007':
       if verbiose==1: print('running',mods['Model Name'][j])
-      sizeregimes={'pham':[0.05,5000.], 'shu': [1.,30.], 'ga': [500.,5000.], 'kerr': [500.,5000.], 'svet': [0.05,0.5], 'roche': [3750.,5000.]}#no svet07
+      sizeregimes = {
+          'pham':   [0.05, 9900],
+          'shu':    [1.0, 30.0],
+          'ga':     [3190, 3590],
+          'kerr':   [3000.0, 7350],
+          'svet':   [0.05, 0.5],
+          # 'svet07': [0.05, 5.0],
+          'roche':  [3750.0, 9900]
+      }
       if verbiose==1: print(sizeregimes)
       compwithsvet07check=False
       compsetup()
