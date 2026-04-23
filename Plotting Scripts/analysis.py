@@ -298,12 +298,20 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
 
     ax.set_title(title)
     ax.set_xlabel(xlabel)
+    
     ax.set_ylabel("Probability Density")
 
     if logcheck:
         ax.set_xscale('log')
     if xlabel=="Impactor Radius (km)":
         ax.set_xlim(0.3, 1.2)
+        ax.annotate(
+        '',
+        xy=(1.02+0.015, 0), xytext=(1.0+0.015, 0),
+        xycoords=('axes fraction', 'axes fraction'),
+        arrowprops=dict(arrowstyle='-|>', color='black', lw=0),
+        annotation_clip=False
+        ) #making an arrow
     else:
         ax.set_xlim(0, 50)
 
