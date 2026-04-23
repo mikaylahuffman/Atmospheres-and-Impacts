@@ -3227,7 +3227,7 @@ def runmodels(): #doing globals like this ain't great coding habits
       sizeregimes = {
           'pham':   [0.05, 9900],
           'shu':    [1.0, 30.0],
-          'ga':     [3190, 3590],
+          'ga':     [3000, 5000],
           'kerr':   [3000.0, 7350],
           'svet':   [0.05, 0.5],
           'svet07': [0.05, 5.0],
@@ -3247,7 +3247,7 @@ def runmodels(): #doing globals like this ain't great coding habits
       sizeregimes = {
           'pham':   [0.05, 9900],
           'shu':    [1.0, 30.0],
-          'ga':     [3190, 3590],
+          'ga':     [3000, 5000],
           'kerr':   [3000.0, 7350],
           'svet':   [0.05, 0.5],
           # 'svet07': [0.05, 5.0],
