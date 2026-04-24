@@ -127,10 +127,10 @@ custom_ylims = {}
 custom_yticks = {}
 
 custom_ylims['Venus'] = (0.3e7, 1.4e7)
-custom_yticks['Venus'] = [0.4e7, 0.6e7, 0.8e7, 1.0e7, 1.2e7, 1.4e7]
+custom_yticks['Venus'] = None #[0.4e7, 0.6e7, 0.8e7, 1.0e7, 1.2e7, 1.4e7]
 
 custom_ylims['Earth'] = (0.8e5, 1.4e5)
-custom_yticks['Earth'] = [0.8e5, 0.9e5, 1.0e5, 1.1e5, 1.2e5, 1.3e5, 1.4e5]
+custom_yticks['Earth'] = None #[0.8e5, 0.9e5, 1.0e5, 1.1e5, 1.2e5, 1.3e5, 1.4e5]
 
 mars_max = np.nanmax([np.nanmax(arr[2]) for arr in processed['Mars'].values()])
 mars_min = 1e2
