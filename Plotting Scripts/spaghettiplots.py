@@ -16,10 +16,10 @@ plt.rcParams.update({
 
 # ——— CONFIGURATION —————————————————————————————————————
 base_dir       = "C:/Users/mihu1229/Desktop/plottingtests" #"/scratch/alpine/mihu1229/MCv8"
-models         = ['pham','shu','kerr','ga','roche','svet','svet07','hilke','deniem','comps']#,'compns']
+models         = ['pham250','shu','kerr','ga','roche','svet','svet07','hilke','deniem','comps']#,'compns']
 column_name    = 'Running Total Atm P (Pa)'
 runs_per_plot  = 5
-nrows, ncols   = 2, 3   # 2 rows × 3 columns
+nrows, ncols   = 1, 1#2, 3   # 2 rows × 3 columns
 dpi            = 600
 
 # ——— UTILITIES ————————————————————————————————————————
@@ -107,4 +107,4 @@ def plot_all_models(planet, pressure):
 
 # ——— MAIN ——————————————————————————————————————————
 if __name__ == "__main__":
-    plot_all_models("Venus", 92.5)
+    plot_all_models("Earth", 1)
