@@ -16,8 +16,8 @@ from tqdm import tqdm
 import os
 import argparse
 
-multirun=False #True= use multiple CPUs to run
-runlocal=True #True= running on like your laptop, False= on a supercomputer cluster
+multirun=True#False #True= use multiple CPUs to run
+runlocal=False#True #True= running on like your laptop, False= on a supercomputer cluster
 
 if runlocal==False:
   parser = argparse.ArgumentParser(description='')
@@ -36,13 +36,13 @@ if runlocal==False:
 
 
 if runlocal==False: base_dir = r"/scratch/alpine/mihu1229/MCv8"
-if runlocal==True: base_dir = r"C:/Users/mihu1229/Desktop/plottingtests"
+if runlocal==True: base_dir = r"C:/Users/mihu1229/Desktop/sensitivity test/rmin0p3"
 
 if runlocal==False: args = parser.parse_args()
 
 if runlocal==True:
-  startingP=92.5 #bar
-  planet='Venus'
+  startingP=1 #bar
+  planet='Earth'
 if runlocal==False:
   planet=args.planet
   startingP=args.startingP
@@ -113,7 +113,7 @@ medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 # numruns=30
 numruns=5
 # numimps=int(5e6)
-numimps=5000
+numimps=int(2e6)
 if verbiose==1:
     print(numimps)
 #quickjump
@@ -3222,7 +3222,7 @@ def runmodels(): #doing globals like this ain't great coding habits
       svet07run()
       if verbiose==1: print('done')
 
-    elif mods['Model Name'][j]=='Composite with Svetsov 2007':
+    elif mods['Model Name'][j]=='Composite with Roche':
       if verbiose==1: print('running',mods['Model Name'][j])
       sizeregimes = {
           'pham':   [0.05, 9900],
@@ -3242,7 +3242,7 @@ def runmodels(): #doing globals like this ain't great coding habits
         compatmchangerun()
       if verbiose==1: print('done')
 
-    elif mods['Model Name'][j]=='Composite without Svetsov 2007':
+    elif mods['Model Name'][j]=='Composite without Roche': #co opting this to do w/o Roche instead of w/o svet07
       if verbiose==1: print('running',mods['Model Name'][j])
       sizeregimes = {
           'pham':   [0.05, 9900],
@@ -3250,8 +3250,8 @@ def runmodels(): #doing globals like this ain't great coding habits
           'ga':     [3000, 5000],
           'kerr':   [3000.0, 7350],
           'svet':   [0.05, 0.5],
-          # 'svet07': [0.05, 5.0],
-          'roche':  [3750.0, 9900]
+          'svet07': [0.05, 5.0]
+          # 'roche':  [3750.0, 9900]
       }
       if verbiose==1: print(sizeregimes)
       compwithsvet07check=False

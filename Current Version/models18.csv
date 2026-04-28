@@ -6,6 +6,7 @@ Svetsov 2000,svet,None,sec
 Svetsov 2007,svet07,None,None
 Kegerreis,kerr,None,sec
 Schlichting,hilke,None,sec
-Composite with Svetsov 2007,comps,None,None
+Composite with Roche,comps,None,None
 de Niem,deniem,None,None
 Roche,roche,None,sec
+Composite without Roche,compns,None,None
