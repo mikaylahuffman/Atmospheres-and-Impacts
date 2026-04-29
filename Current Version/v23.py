@@ -16,8 +16,8 @@ from tqdm import tqdm
 import os
 import argparse
 
-multirun=False #True= use multiple CPUs to run
-runlocal=True #True= running on like your laptop, False= on a supercomputer cluster
+multirun=True #True= use multiple CPUs to run
+runlocal=False #True= running on like your laptop, False= on a supercomputer cluster
 
 if runlocal==False:
   parser = argparse.ArgumentParser(description='')
@@ -110,10 +110,10 @@ Dlimforlosschoice=2 #for deniem, swaps between Dlim for loss being H(rho_0/rho_i
 
 medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
-# numruns=30
-numruns=5
-# numimps=int(5e6)
-numimps=9200000
+numruns=30
+# numruns=5
+numimps=int(5e6)
+# numimps=9200000
 if verbiose==1:
     print(numimps)
 #quickjump
@@ -407,7 +407,7 @@ G=6.6743*10**-20 #km^3 kg^-1 s^-2 grav const
 
 randomseed=80303
 np.random.seed(randomseed)
-size_lowerbound=0.175
+size_lowerbound=0.3
 size_upperbound=5000.
 
 r_imp_array=np.logspace(np.log10(size_lowerbound),np.log10(size_upperbound),numimps)
@@ -694,6 +694,47 @@ if atmchange==True:
         plt.title('asteroids')
         plt.ylabel('probability')
     # plt.xlim(0,50)
+  
+def generate_impactors_for_run(run_id):
+    rng = np.random.default_rng(randomseed + int(run_id))
+
+    #impsizes
+    r_chunks = []
+    n_have = 0
+    max_size_cdf = np.max(sizecdf)
+
+    while n_have < numimps:
+        n_needed = numimps - n_have
+
+        # Oversample a bit because some values may be above max_size_cdf
+        randomnums = rng.uniform(0, max_size_cdf, n_needed)
+
+        new_vals = np.asarray(sizeicdf_interp(randomnums), dtype=float)
+        new_vals = new_vals[new_vals <= size_upperbound]
+
+        r_chunks.append(new_vals)
+        n_have += len(new_vals)
+
+    r_imp_array = np.concatenate(r_chunks)[:numimps]
+
+    #vimps
+    comet_randoms = rng.uniform(0, 1, numimps)
+    asteroid_randoms = rng.uniform(0, 1, numimps)
+
+    comet_v = np.asarray(cvicdf_interp(comet_randoms), dtype=float)
+    asteroid_v = np.asarray(avicdf_interp(asteroid_randoms), dtype=float)
+
+    # imp type
+    type_randoms = rng.uniform(0, 1, numimps)
+    is_comet = type_randoms < probcomet
+
+    v_imp_array = np.where(is_comet, comet_v, asteroid_v)
+    rho_imp_array = np.where(is_comet, rho_comet, rho_asteroid)
+    yimp_array = np.where(is_comet, cometyimp, asteroidyimp)
+
+    total_mass = np.sum((4.0 / 3.0) * np.pi * r_imp_array**3 * rho_imp_array)
+
+    return r_imp_array, v_imp_array, rho_imp_array, yimp_array, total_mass
 
 if atmchange==True and numruns==1:
     # np.random.seed(randomseed)
@@ -764,145 +805,7 @@ if atmchange==True and numruns==1:
         print('{index: [radius, velocity, density, volatile mass fraction, impactor type],...}')
         print(impactordictionary[1])
 
-if atmchange==True and numruns!=1: 
-  randomseedlist=np.random.uniform(0,numimps,numruns)
-  impdict = {}
-  allimpsarray=[]
 
-  pbar = tqdm(total=numruns, desc="Generating imps for all runs")
-
-  for numrun in range(1,numruns+1):
-    np.random.seed(round(randomseedlist[numrun-1]))
-    randomnumbers=[]
-    randomlychosensizevals=[]
-    crandomlychosenvelovals=[]
-    arandomlychosenvelovals=[]
-    randomlychosenimptypes=[]
-    genimpscounter=0
-
-    while genimpscounter<numimps:
-      randomnum=np.random.uniform(0,1,1)[0]
-      try:
-        if float(sizeicdf_interp(randomnum))<=size_upperbound:
-          randomlychosensizevals.append(float(sizeicdf_interp(randomnum)))
-          randomnumbers.append(randomnum)
-          genimpscounter+=1
-      except:
-        if verbiose==1: print(randomnum,"is outside the interpolation range, and will convert to an impactor bigger than r =",size_upperbound,"so we'll skip it")
-    
-    if plotallimpscheck==True:
-      allimpsarray.extend(randomlychosensizevals)
-
-    seen = set()
-    h=0
-    for i, e in enumerate(randomlychosensizevals):
-        if e in seen:
-            h+=1 
-        else:
-            seen.add(e)
-    # print(h,'repeats for sizes for run number',numrun)
-
-    # print(randomnumbers)
-
-    randomnumbers=np.random.uniform(0,1,numimps)
-
-    # print(randomnumbers)
-
-    for randomnum in randomnumbers:
-      crandomlychosenvelovals.append(float(cvicdf_interp(randomnum)))
-
-    seen = set()
-    h=0
-    for i, e in enumerate(crandomlychosenvelovals):
-        if e in seen:
-            h+=1
-        else:
-            seen.add(e)
-    # print(h,'repeats for comet velocities for run number',numrun)
-
-    randomnumbers=np.random.uniform(0,1,numimps)
-
-    # print(randomnumbers)
-
-    for randomnum in randomnumbers:
-      arandomlychosenvelovals.append(float(avicdf_interp(randomnum)))
-
-    seen = set()
-    h=0
-    for i, e in enumerate(arandomlychosenvelovals):
-        if e in seen:
-            h+=1
-        else:
-            seen.add(e)
-    # print(h,'repeats for asteroid velocities for run number',numrun)
-
-    randomnumbers=np.random.uniform(0,1,numimps)
-    # print(randomnumbers)
-    
-    for randomnum in randomnumbers:
-      if randomnum<probcomet:
-        imptype='comet'
-      else: 
-        imptype='asteroid'
-      randomlychosenimptypes.append(imptype)
-
-
-    impactordictionary={}
-
-    for index,r,imptype,vc,va in zip(range(1,numimps+1),randomlychosensizevals,randomlychosenimptypes,crandomlychosenvelovals,arandomlychosenvelovals):
-      if imptype=='comet':
-        v=vc
-        rho=rho_comet
-        yimp=cometyimp
-      elif imptype=='asteroid':
-        v=va
-        rho=rho_asteroid
-        yimp=asteroidyimp
-      impactordictionary[index]=[r,v,rho,yimp,imptype]
-
-    impdict[numrun]=impactordictionary
-    pbar.update(1)
-    # print('number of imps =',len(randomlychosensizevals),len(randomlychosenimptypes),len(crandomlychosenvelovals),len(arandomlychosenvelovals),len(impactordictionary),len(impdict[numrun]))
-  
-  pbar.close()
-  imp_arrays = pd.DataFrame(impdict)
-  if verbiose==1:
-    # if printdatatables==True: display(imp_arrays)
-    # display(imp_arrays[1][1])
-    print('so the pandas set up is like the following:')
-    print('the columns are the runs, and the impactors are the rows')
-    print('each cell contains a list for that impactor')
-    print('[radius, velocity, density, volatile mass fraction, impactor type]')
-
-total_masses = []
-#quickjump
-for run in imp_arrays.columns:
-    total_mass = 0 
-    i=0
-    for impactor in imp_arrays[run]:
-        r = impactor[0]
-        rho = impactor[2]
-        volume = (4/3) * np.pi * (r ** 3) 
-        mass = volume * rho             
-        total_mass += mass 
-        # if i==0:
-        #     print('radius=',r,'rho=',rho,'volume=',volume,'mass=',mass)  
-        i+=1        
-    total_masses.append(total_mass)  
-
-total_masses = np.array(total_masses)
-
-average_mass = np.mean(total_masses)
-std_mass = np.std(total_masses)
-median_mass = np.median(total_masses)
-percentiles = np.percentile(total_masses, [25, 75])
-
-# if verbiose==1:
-print("Average total impacting mass:", average_mass, "kg")
-print("Standard deviation:", std_mass,"kg")
-print("Median total mass:",median_mass,"kg")
-print("25th percentile:",percentiles[0],"kg")
-print("75th percentile",percentiles[1],"kg")
 
 #@title savecsv and savepickle functions
 
@@ -1013,11 +916,6 @@ def drag(r_imp,v_imp):
     #newv_imp=terminalvelocity
   return newv_imp
 
-#testing pressure eqn
-# print(r_planet)
-# print(mass_atm)
-# print(gravity)
-# print(atmmass_to_surfacepressure(r_planet,presentday_atm_m,gravity))
 
 printifnegative=False
 
@@ -3279,23 +3177,39 @@ def runmodels(): #doing globals like this ain't great coding habits
 
 def multiproc_running_models(run_id):
     global numrun, r_imp_array, v_imp_array, rho_imp_array, yimp_array
-    try:
-        numrun = run_id
-        r_imp_array = []
-        v_imp_array = []
-        rho_imp_array = []
-        yimp_array = []
 
-        for ind in range(1, numimps + 1):
-            r_imp_array.append(imp_arrays[run_id][ind][0])
-            v_imp_array.append(imp_arrays[run_id][ind][1])
-            rho_imp_array.append(imp_arrays[run_id][ind][2])
-            yimp_array.append(imp_arrays[run_id][ind][3])
+    try:
+        numrun = int(run_id)
+
+        if atmchange:
+            (
+                r_imp_array,
+                v_imp_array,
+                rho_imp_array,
+                yimp_array,
+                total_mass,
+            ) = generate_impactors_for_run(numrun)
+
+        else:
+            r_imp_array = np.logspace(
+                np.log10(size_lowerbound),
+                np.log10(size_upperbound),
+                numimps
+            )
+            v_imp_array = np.full(numimps, v_esc + 5, dtype=float)
+            rho_imp_array = np.full(numimps, rho_asteroid, dtype=float)
+            yimp_array = np.full(numimps, asteroidyimp, dtype=float)
+
+            total_mass = np.sum((4.0 / 3.0) * np.pi * r_imp_array**3 * rho_imp_array)
+
+        print("Run", numrun, "total impacting mass:", total_mass, "kg", flush=True)
 
         runmodels()
-        return run_id
-    except Exception as e:
-        print("Run",run_id,"failed")
+
+        return numrun, total_mass
+
+    except Exception:
+        print("Run", run_id, "failed", flush=True)
         raise
 
 if __name__ == "__main__":
@@ -3328,32 +3242,78 @@ if __name__ == "__main__":
       print('a scary warning about an overflow in the exp might show up when the composite model runs.')
       print('you can ignore it. email Mikayla Huffman (mikaylarhuffman@gmail.com) if you want more explanation for why it happens!')
 
-    if multirun:
+    if multirun==True:
+      total_masses = []
+
       nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "16"))
 
       with mp.Pool(processes=nproc) as pool:
-        for _ in tqdm(
-            pool.imap_unordered(multiproc_running_models, range(1, numruns + 1)),
-            total=numruns,
-            desc="Progress for all runs"
-        ):
-          pass
+          for run_id, total_mass in tqdm(
+              pool.imap_unordered(multiproc_running_models, range(1, numruns + 1)),
+              total=numruns,
+              desc="Progress for all runs"
+          ):
+              total_masses.append(total_mass)
+
+      total_masses = np.array(total_masses)
+
+      average_mass = np.mean(total_masses)
+      std_mass = np.std(total_masses)
+      median_mass = np.median(total_masses)
+      percentiles = np.percentile(total_masses, [25, 75])
+
+      print("Average total impacting mass:", average_mass, "kg")
+      print("Standard deviation:", std_mass, "kg")
+      print("Median total mass:", median_mass, "kg")
+      print("25th percentile:", percentiles[0], "kg")
+      print("75th percentile", percentiles[1], "kg")
+
     else:
+      total_masses = []
       pbar = tqdm(total=numruns, desc="Progress for all runs")
-      for numrun in range(1,numruns+1): #this is making r_imp_array a list of lists 
-        if verbiose==1: print('\n')
-        if verbiose==1: print('run number',numrun)
-        r_imp_array=[]
-        v_imp_array=[]
-        rho_imp_array=[]
-        yimp_array=[]
-        for ind in range(1,numimps+1):
-          r_imp_array.append(imp_arrays[numrun][ind][0])
-          v_imp_array.append(imp_arrays[numrun][ind][1])
-          rho_imp_array.append(imp_arrays[numrun][ind][2])
-          yimp_array.append(imp_arrays[numrun][ind][3])
+
+      for run_id in range(1, numruns + 1):
+        numrun = int(run_id)
+
+        if atmchange:
+            (
+                r_imp_array,
+                v_imp_array,
+                rho_imp_array,
+                yimp_array,
+                total_mass,
+            ) = generate_impactors_for_run(numrun)
+        else:
+            r_imp_array = np.logspace(
+                np.log10(size_lowerbound),
+                np.log10(size_upperbound),
+                numimps
+            )
+            v_imp_array = np.full(numimps, v_esc + 5, dtype=float)
+            rho_imp_array = np.full(numimps, rho_asteroid, dtype=float)
+            yimp_array = np.full(numimps, asteroidyimp, dtype=float)
+
+            total_mass = np.sum((4.0 / 3.0) * np.pi * r_imp_array**3 * rho_imp_array)
+
+        print("Run", numrun, "total impacting mass:", total_mass, "kg", flush=True)
+
+        total_masses.append(total_mass)
         runmodels()
         pbar.update(1)
+
+      total_masses = np.array(total_masses)
+
+      average_mass = np.mean(total_masses)
+      std_mass = np.std(total_masses)
+      median_mass = np.median(total_masses)
+      percentiles = np.percentile(total_masses, [25, 75])
+
+      print("Average total impacting mass:", average_mass, "kg")
+      print("Standard deviation:", std_mass, "kg")
+      print("Median total mass:", median_mass, "kg")
+      print("25th percentile:", percentiles[0], "kg")
+      print("75th percentile", percentiles[1], "kg")
+
       pbar.close()
   #quickjump
 
