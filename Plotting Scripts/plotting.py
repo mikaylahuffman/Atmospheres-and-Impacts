@@ -32,10 +32,10 @@ planet_dirs = {
 starting_pressures = {'Venus': 92.5e5, 'Earth': 1.0e5, 'Mars': 0.006e5}  # Pa
 
 medianoravg = 'median'
-sampleevery = 1
+sampleevery = 10
 plotunc = True
 low_alpha = 0.1
-plot_stride = 10
+plot_stride = 1
 
 model_colors = {
     'pham250': 'darkgreen',
@@ -69,7 +69,10 @@ excluded_from_fig1 = {'hilke', 'deniem', 'comps'}
 processed = {}
 
 for planet, folder in planet_dirs.items():
-    pkl_file = f"{planet.lower()}_medians.pkl"
+
+    # Include sampleevery in the cache filename so old caches made with
+    # a different sampling rate do not silently mess up the x-axis.
+    pkl_file = f"{planet.lower()}_medians_sampleevery{sampleevery}.pkl"
 
     if os.path.exists(pkl_file):
         print(f"Loading precomputed medians for {planet} from {pkl_file}...")
@@ -78,30 +81,58 @@ for planet, folder in planet_dirs.items():
         continue
 
     print(f"Loading data for {planet}...")
-    model_runs = defaultdict(list)
-    files = [f for f in os.listdir(folder) if f.endswith('.pkl') and f.startswith(planet)]
 
-    for file in tqdm(files):
-        parts = file.split('_')
-        try:
-            model = parts[3]
-            with open(os.path.join(folder, file), 'rb') as f:
-                df = pickle.load(f)
+    files = [
+        f for f in os.listdir(folder)
+        if f.endswith('.pkl') and f.startswith(planet)
+    ]
 
-            if 'Running Total Atm P (Pa)' in df.columns:
-                sampled = df['Running Total Atm P (Pa)'].to_numpy()[::sampleevery]
-                model_runs[model].append(sampled)
-
-            del df
-            gc.collect()
-
-        except Exception as e:
-            print(f"Failed on {file}: {e}")
-
-    print(f"Processing medians for {planet}...")
     planet_medians = {}
 
-    for model, array_list in model_runs.items():
+    # Process one model at a time instead of storing all models for the planet.
+    for model in model_colors.keys():
+
+        model_files = []
+        for file in files:
+            parts = file.split('_')
+            if len(parts) > 3 and parts[3] == model:
+                model_files.append(file)
+
+        if len(model_files) == 0:
+            print(f"No files found for {planet}, model {model}")
+            continue
+
+        print(f"  Processing {planet} {model}: {len(model_files)} files")
+
+        array_list = []
+
+        for file in tqdm(model_files, desc=f"{planet} {model}"):
+            try:
+                with open(os.path.join(folder, file), 'rb') as f:
+                    df = pickle.load(f)
+
+                if 'Running Total Atm P (Pa)' in df.columns:
+                    sampled = (
+                        df['Running Total Atm P (Pa)']
+                        .to_numpy(dtype=np.float32)[::sampleevery]
+                    )
+                    array_list.append(sampled)
+
+                del df
+                gc.collect()
+
+            except Exception as e:
+                print(f"Failed on {file}: {e}")
+
+        if len(array_list) == 0:
+            print(f"No usable arrays for {planet} {model}")
+            continue
+
+        # Make sure all runs have the same length.
+        # If one run is slightly shorter/longer, trim all to the shortest length.
+        min_len = min(len(a) for a in array_list)
+        array_list = [a[:min_len] for a in array_list]
+
         arr = np.vstack(array_list)
 
         if medianoravg == 'avg':
@@ -113,7 +144,16 @@ for planet, folder in planet_dirs.items():
             p25 = np.nanpercentile(arr, 25, axis=0)
             p75 = np.nanpercentile(arr, 75, axis=0)
 
-        planet_medians[model] = (median, p25, p75)
+        # Store as float32 to keep the cached medians smaller.
+        planet_medians[model] = (
+            median.astype(np.float32),
+            p25.astype(np.float32),
+            p75.astype(np.float32)
+        )
+
+        del arr
+        del array_list
+        gc.collect()
 
     processed[planet] = planet_medians
 
