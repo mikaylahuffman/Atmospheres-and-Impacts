@@ -169,14 +169,24 @@ print("All medians processed and saved.")
 custom_ylims = {}
 custom_yticks = {}
 
-custom_ylims['Venus'] = (0.3e7, 1.4e7)
-custom_yticks['Venus'] = None #[0.4e7, 0.6e7, 0.8e7, 1.0e7, 1.2e7, 1.4e7]
+venus_max = 9700000 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Venus'].values()])
+venus_min = 9100000#np.nanmin([np.nanmin(arr[0]) for arr in processed['Venus'].values()])
+custom_ylims['Venus'] = (venus_min, venus_max)
+custom_yticks['Venus'] = None
 
-custom_ylims['Earth'] = (0.97e5, 4.7e5)
-custom_yticks['Earth'] = None #[0.8e5, 0.9e5, 1.0e5, 1.1e5, 1.2e5, 1.3e5, 1.4e5]
+# custom_ylims['Venus'] = (0.3e7, 1.25e7)
+# custom_yticks['Venus'] = None #[0.4e7, 0.6e7, 0.8e7, 1.0e7, 1.2e7, 1.4e7]
 
-mars_max = np.nanmax([np.nanmax(arr[2]) for arr in processed['Mars'].values()])
-mars_min = 1e2
+earth_max = 350000 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Earth'].values()])
+earth_min = 0.97e5 #np.nanmin([np.nanmin(arr[0]) for arr in processed['Earth'].values()])
+custom_ylims['Earth'] = (earth_min, earth_max)
+custom_yticks['Earth'] = None
+
+# custom_ylims['Earth'] = (0.97e5, 3.1e6)
+# custom_yticks['Earth'] = None #[0.8e5, 0.9e5, 1.0e5, 1.1e5, 1.2e5, 1.3e5, 1.4e5]
+
+mars_max = 180000 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Mars'].values()])
+mars_min = 2e1 #np.nanmin([np.nanmin(arr[0]) for arr in processed['Mars'].values()])#2e1
 custom_ylims['Mars'] = (mars_min, mars_max)
 custom_yticks['Mars'] = None
 
@@ -250,9 +260,9 @@ def make_subplot(ax, planet, modeldata, title, zoom=False, comps_only=False):
         ax.yaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
         ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
 
-    else:
-        ax.set_yscale('symlog')
-        ax.set_ylim(0)
+    # else:
+        # ax.set_yscale('symlog')
+        # ax.set_ylim(0)
 
 
 # === Legend Function ===
@@ -316,7 +326,7 @@ make_subplot(axs1[2, 0], 'Mars', processed['Mars'], 'Mars')
 make_subplot(axs1[2, 1], 'Mars', processed['Mars'], 'Mars', zoom=True)
 
 fig1_handles = build_custom_legend([
-    'pham250', 'shu', 'kerr', 'ga', 'roche', 'svet', 'svet07'
+    'pham250', 'shu', 'kerr', 'ga', 'svet', 'svet07' #'roche'
 ])
 
 
@@ -346,7 +356,7 @@ make_subplot(axs2[2, 0], 'Mars', processed['Mars'], 'Mars', comps_only=True)
 make_subplot(axs2[2, 1], 'Mars', processed['Mars'], 'Mars', zoom=True, comps_only=True)
 
 fig2_handles = build_custom_legend([
-    'pham250', 'shu', 'kerr', 'ga', 'roche', 'svet', 'svet07',
+    'pham250', 'shu', 'kerr', 'ga', 'svet', 'svet07', #'roche'
     'compns','hilke', 'deniem'
 ])
 

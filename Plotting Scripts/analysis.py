@@ -254,20 +254,26 @@ def _concat_if_present(dct, planet):
     return pd.DataFrame()
 
 def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, title, xlabel, logcheck=False):
-    plotted_any = False
+    plotted_any_data = False
+    plotted_any_pdf = False
 
     is_radius_plot = xlabel == "Impactor Radius (km)"
+    is_velocity_plot = xlabel == "Velocity (km/s)"
 
     if is_radius_plot:
         x_plot_min, x_plot_max = 0.3, 1.2
+    elif is_velocity_plot:
+        # don't evaluate the PDF exactly at x = 0.
+        x_plot_min, x_plot_max = 1e-6, 50.0
     else:
-        x_plot_min, x_plot_max = 0.0, 50.0
+        x_plot_min, x_plot_max = 1e-6, 50.0
 
     for planet in ['Venus', 'Earth', 'Mars']:
         if planet not in data_by_planet:
             continue
 
         data = np.array(data_by_planet[planet], dtype=float)
+        data = data[np.isfinite(data)]
 
         if is_radius_plot or logcheck:
             data = data[data > 0]
@@ -277,8 +283,7 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
 
         # Histogram bins
         if is_radius_plot:
-            # Match the displayed radius range.
-            bins = np.logspace(np.log10(x_plot_min), np.log10(x_plot_max), 40)
+            bins = np.logspace(np.log10(0.3), np.log10(1.2), 40)
         else:
             bins = 40
 
@@ -291,35 +296,46 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
             label=planet
         )
 
+        plotted_any_data = True
 
         if is_radius_plot:
-            x = np.logspace(np.log10(x_plot_min), np.log10(x_plot_max), 1000)
+            x = np.logspace(np.log10(0.3), np.log10(1.2), 1000)
         else:
             x = np.linspace(x_plot_min, x_plot_max, 1000)
 
         y = pdf_func_by_planet[planet](x)
 
+        finite_mask = np.isfinite(x) & np.isfinite(y)
+        x_finite = x[finite_mask]
+        y_finite = y[finite_mask]
 
-        area = np.trapz(y, x)
+        if len(x_finite) < 2:
+            print(f"[WARN] Not enough finite PDF points for {planet} in {title or xlabel}")
+            continue
+
+        area = np.trapezoid(y_finite, x_finite)
+
         if np.isfinite(area) and area != 0:
-            y = y / area
+            y_finite = y_finite / area
         else:
             print(f"[WARN] Could not normalize PDF for {planet}: area={area}")
             continue
 
-        ax.plot(x, y, color=planet_colors[planet], linewidth=2)
-        plotted_any = True
+        ax.plot(x_finite, y_finite, color=planet_colors[planet], linewidth=2)
+        plotted_any_pdf = True
 
-    if not plotted_any:
+    if not plotted_any_data:
         ax.set_title(title + " (no data)")
         return
 
-    ax.set_title(title)
+    if title:
+        ax.set_title(title)
+
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Probability Density")
 
     if is_radius_plot:
-        ax.set_xlim(x_plot_min, x_plot_max)
+        ax.set_xlim(0.3, 1.2)
         ax.annotate(
             '',
             xy=(1.02 + 0.015, 0), xytext=(1.0 + 0.015, 0),
@@ -327,8 +343,13 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
             arrowprops=dict(arrowstyle='-|>', color='black', lw=0),
             annotation_clip=False
         )
+    elif is_velocity_plot:
+        ax.set_xlim(0, 50)
     else:
         ax.set_xlim(x_plot_min, x_plot_max)
+
+    if not plotted_any_pdf:
+        print(f"[WARN] Histograms plotted, but no PDFs plotted for {title or xlabel}")
 
 def plot_full_size_histograms( #another plot showing the full size range
     asteroid_radius_data,
@@ -732,8 +753,8 @@ sizeregimes = {
     'ga':     [3000, 5000],
     'kerr':   [3000.0, 7350],
     'svet':   [0.05, 0.5],
-    'svet07': [0.05, 5.0],
-    'roche':  [3750.0, 9900]
+    'svet07': [0.05, 5.0]#,
+    # 'roche':  [3750.0, 9900]
 }
 
 def plot_size_regimes(output_dir):
@@ -744,15 +765,15 @@ def plot_size_regimes(output_dir):
         'ga': 'ga',
         'kerr': 'kerr',
         'svet': 'svet',
-        'svet07': 'svet07',
-        'roche': 'roche'
+        'svet07': 'svet07'#,
+        # 'roche': 'roche'
     }
 
     # vertical positions for the labeled line segments
     y_positions = {
         'svet07': 5,
         'svet':   4,
-        'roche':   5,
+        # 'roche':   5,
         'ga':     4,
         'kerr':  3,
         'shu':    3,
@@ -818,7 +839,7 @@ def plot_size_regimes(output_dir):
 plot_foveri_composites(model_data)
 
 # composite_no_svet = extract_composite_by_planet(model_data, "compns")
-composite_with_svet = extract_composite_by_planet(model_data, "comps")
+composite_with_svet = extract_composite_by_planet(model_data, "compns")
 
 # plot_foveri_composite_results(composite_no_svet, "Composite Model (Without Svetsov 2007)")
 plot_foveri_composite_results(composite_with_svet, "Composite Model")
