@@ -416,8 +416,8 @@ v_lowerbound=1
 v_upperbound=100
 v_imp_array=np.linspace(v_lowerbound,v_upperbound,numimps)
 
-cometyimp=2*0.2
-asteroidyimp=2*0.02 #values from deNiem 2012
+cometyimp=0.2
+asteroidyimp=0.02 #values from deNiem 2012
 
 rho_comet=1e12 #kg/km^3
 rho_asteroid=2.7e12 #kg/km^3
