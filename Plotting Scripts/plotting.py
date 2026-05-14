@@ -177,7 +177,7 @@ custom_yticks['Venus'] = None
 # custom_ylims['Venus'] = (0.3e7, 1.25e7)
 # custom_yticks['Venus'] = None #[0.4e7, 0.6e7, 0.8e7, 1.0e7, 1.2e7, 1.4e7]
 
-earth_max = 350000*1.1 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Earth'].values()])
+earth_max = 350000*1.05 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Earth'].values()])
 earth_min = 0.97e5 #np.nanmin([np.nanmin(arr[0]) for arr in processed['Earth'].values()])
 custom_ylims['Earth'] = (earth_min, earth_max)
 custom_yticks['Earth'] = None
@@ -185,7 +185,7 @@ custom_yticks['Earth'] = None
 # custom_ylims['Earth'] = (0.97e5, 3.1e6)
 # custom_yticks['Earth'] = None #[0.8e5, 0.9e5, 1.0e5, 1.1e5, 1.2e5, 1.3e5, 1.4e5]
 
-mars_max = 260000 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Mars'].values()])
+mars_max = 260000*1.1 #np.nanmax([np.nanmax(arr[2]) for arr in processed['Mars'].values()])
 mars_min = 2e1 #np.nanmin([np.nanmin(arr[0]) for arr in processed['Mars'].values()])#2e1
 custom_ylims['Mars'] = (mars_min, mars_max)
 custom_yticks['Mars'] = None
