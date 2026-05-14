@@ -39,13 +39,13 @@ model_labels = {
     "shu": "Shuvalov",
     "kerr": "Kegerreis",
     "ga": "Genda & Abe",
-    "roche": "Roche",
+    # "roche": "Roche",
     "svet": "Svetsov 2000",
     "svet07": "Svetsov 2007",
-    "comps": "Composite",
+    # "comps": "Composite with Roche",
+    "compns": "Composite", #without Roche
     "hilke": "Schlichting",
-    "deniem": "de Niem"
-    # "compns": "Composite without Roche"
+    "deniem": "de Niem"    
 }
 
 model_colors = {
@@ -53,10 +53,10 @@ model_colors = {
     'shu': 'limegreen',
     'kerr': 'darkturquoise',
     'ga': 'cornflowerblue',
-    'roche': 'blue',
+    # 'roche': 'blue',
     'svet': 'darkviolet',
     'svet07': 'pink',
-    'comps': 'black',
+    'compns': 'black', #'comps': 'black',
     'hilke': 'gray',
     'deniem': 'firebrick'
 }
@@ -300,7 +300,7 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
         y = pdf_func_by_planet[planet](x)
 
 
-        area = np.trapezoid(y, x)
+        area = np.trapz(y, x)
         if np.isfinite(area) and area != 0:
             y = y / area
         else:

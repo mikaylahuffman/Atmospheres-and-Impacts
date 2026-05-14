@@ -57,13 +57,13 @@ model_labels = {
     "shu": "Shuvalov",
     "kerr": "Kegerreis",
     "ga": "Genda & Abe",
-    "roche": "Roche",
+    # "roche": "Roche",
     "svet": "Svetsov 2000",
     "svet07": "Svetsov 2007",
-    "comps": "Composite",
+    "compns": "Composite",
     "hilke": "Schlichting",
     "deniem": "de Niem"
-    # "compns": "Composite without Roche"
+    # "comps": "Composite with Roche"
 }
 
 model_colors = {
@@ -71,15 +71,15 @@ model_colors = {
     'shu': 'limegreen',
     'kerr': 'darkturquoise',
     'ga': 'cornflowerblue',
-    'roche': 'blue',
+    # 'roche': 'blue',
     'svet': 'darkviolet',
     'svet07': 'pink',
-    'comps': 'black',
+    'compns': 'black', # "comps": "Composite with Roche",
     'hilke': 'gray',
     'deniem': 'firebrick'
 }
 # hide composites in the "no-comps" row
-excluded_from_fig1 = {'hilke', 'deniem', 'comps'}
+excluded_from_fig1 = {'hilke', 'deniem', 'compns'}
 
 
 # Load or compute medians & IQR
@@ -145,7 +145,7 @@ def plot_planet(ax, planet, modeldata, comps_only=False):
     for model, (med, p25, p75) in modeldata.items():
         # decide visibility
         if comps_only:                                     # "with comps"
-            alpha = 1.0 if model in {'hilke', 'deniem', 'comps'} else low_alpha
+            alpha = 1.0 if model in {'hilke', 'deniem', 'compns'} else low_alpha
         else:                                              # "no comps"
             if model in excluded_from_fig1:
                 continue
@@ -228,7 +228,7 @@ def make_planet_pair(planet, outfile_prefix):
 
     # Build a combined legend that covers both rows
     models_nocomp = ['pham', 'shu', 'kerr', 'ga', 'svet', 'svet07']
-    models_with   = models_nocomp + ['hilke', 'deniem', 'comps']
+    models_with   = models_nocomp + ['hilke', 'deniem', 'compns']
     legend_handles = build_custom_legend(models_with)
     fig.legend(handles=legend_handles, loc='center left',
                bbox_to_anchor=(1.02, 0.5), borderaxespad=0.0)

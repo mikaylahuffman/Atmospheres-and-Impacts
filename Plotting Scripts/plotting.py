@@ -42,10 +42,10 @@ model_colors = {
     'shu': 'limegreen',
     'kerr': 'darkturquoise',
     'ga': 'cornflowerblue',
-    'roche': 'blue',
+    # 'roche': 'blue',
     'svet': 'darkviolet',
     'svet07': 'pink',
-    'comps': 'black',
+    'compns': 'black', #'comps': 'black',
     'hilke': 'gray',
     'deniem': 'firebrick'
 }
@@ -55,15 +55,16 @@ model_labels = {
     'shu': 'Shuvalov',
     'kerr': 'Kegerreis',
     'ga': 'Genda & Abe',
-    'roche': 'Roche',
+    # 'roche': 'Roche',
     'svet': 'Svetsov 2000',
     'svet07': 'Svetsov 2007',
-    'comps': 'Composite',
+    # "comps": "Composite with Roche",
+    'compns': 'Composite',
     'hilke': 'Schlichting',
     'deniem': 'de Niem'
 }
 
-excluded_from_fig1 = {'hilke', 'deniem', 'comps'}
+excluded_from_fig1 = {'hilke', 'deniem', 'compns'}
 
 # === Load or Compute Medians ===
 processed = {}
@@ -186,7 +187,7 @@ def make_subplot(ax, planet, modeldata, title, zoom=False, comps_only=False):
 
     for model, (med, p25, p75) in modeldata.items():
 
-        if comps_only and model not in ['hilke', 'deniem', 'comps']:
+        if comps_only and model not in ['hilke', 'deniem', 'compns']:
             alpha = low_alpha
         elif not comps_only and model in excluded_from_fig1:
             continue
@@ -346,7 +347,7 @@ make_subplot(axs2[2, 1], 'Mars', processed['Mars'], 'Mars', zoom=True, comps_onl
 
 fig2_handles = build_custom_legend([
     'pham250', 'shu', 'kerr', 'ga', 'roche', 'svet', 'svet07',
-    'comps','hilke', 'deniem'
+    'compns','hilke', 'deniem'
 ])
 
 

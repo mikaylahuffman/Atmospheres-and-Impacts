@@ -16,7 +16,7 @@ plt.rcParams.update({
 
 # config
 base_dir       = "/scratch/alpine/mihu1229/MCv8"
-models         = ['pham250','shu','kerr','ga','roche','svet','svet07','hilke','deniem','comps']#,'compns']
+models         = ['pham250','shu','kerr','ga','roche','svet','svet07','hilke','deniem','comps','compns']
 column_name    = 'Running Total Atm P (Pa)'
 runs_per_plot  = 5
 nrows, ncols   = 2, 3   # 2 rows × 3 columns
