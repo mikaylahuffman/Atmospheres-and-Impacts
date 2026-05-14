@@ -133,7 +133,7 @@ for planet in planets:
 
                     # Catch impactor populations for overlaid histograms:
                     # comps model at 0.1 bar, stored separately by planet
-                    if model == 'comps' and np.isclose(pressure, 0.1):
+                    if model == 'compns' and np.isclose(pressure, 0.1):
                         asteroids[planet].append(df[df['Imp Volatile Mass Fraction'] == 0.02])
                         comets[planet].append(df[df['Imp Volatile Mass Fraction'] == 0.2])
 
@@ -330,6 +330,79 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
     else:
         ax.set_xlim(x_plot_min, x_plot_max)
 
+def plot_full_size_histograms( #another plot showing the full size range
+    asteroid_radius_data,
+    comet_radius_data,
+    output_dir,
+    filename_base="imps_full_size_logy"
+):
+    fig, axs = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True)
+
+    panels = [
+        (axs[0], asteroid_radius_data, "Asteroids"),
+        (axs[1], comet_radius_data, "Comets")
+    ]
+
+    for ax, data_by_planet, title in panels:
+        plotted_any = False
+
+        for planet in ['Venus', 'Earth', 'Mars']:
+            if planet not in data_by_planet:
+                continue
+
+            data = np.array(data_by_planet[planet], dtype=float)
+            data = data[np.isfinite(data)]
+            data = data[data > 0]
+
+            if len(data) == 0:
+                continue
+
+            # Full generated size range.
+            # Adjust 5000.0 if you later change size_upperbound.
+            bins = np.logspace(np.log10(0.3), np.log10(5000.0), 80)
+
+            ax.hist(
+                data,
+                bins=bins,
+                density=False,
+                alpha=0.3,
+                color=planet_colors[planet],
+                label=planet
+            )
+
+            plotted_any = True
+
+        ax.set_title(title)
+        ax.set_xlabel("Impactor Radius (km)")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(0.3, 5000.0)
+        ax.set_ylabel("Count")
+
+        if not plotted_any:
+            ax.text(
+                0.5, 0.5, "No data",
+                transform=ax.transAxes,
+                ha="center",
+                va="center"
+            )
+
+    handles, labels = axs[0].get_legend_handles_labels()
+    if len(handles) == 0:
+        handles, labels = axs[1].get_legend_handles_labels()
+
+    fig.legend(handles, labels, loc="center right", bbox_to_anchor=(1.0, 0.5))
+    fig.tight_layout(rect=[0, 0, 0.88, 1])
+
+    if verbiose != 0:
+        plt.show()
+
+    fig.savefig(os.path.join(output_dir, f"{filename_base}.png"), dpi=600)
+    fig.savefig(os.path.join(output_dir, f"{filename_base}.pdf"))
+    fig.savefig(os.path.join(output_dir, f"{filename_base}.svg"))
+
+    plt.close(fig)
+
 # === Plot Overlaid Histograms ===
 earth_asteroids_df = _concat_if_present(asteroids, 'Earth')
 mars_asteroids_df = _concat_if_present(asteroids, 'Mars')
@@ -430,6 +503,13 @@ if verbiose != 0:
 fig1.savefig(os.path.join(output_dir, "imps_overlay.png"), dpi=600)
 fig1.savefig(os.path.join(output_dir, "imps_overlay.pdf"))
 fig1.savefig(os.path.join(output_dir, "imps_overlay.svg"))
+
+plot_full_size_histograms(
+    asteroid_radius_data,
+    comet_radius_data,
+    output_dir,
+    filename_base="imps_full_size_logy"
+)
 
 # === Print Mass Statistics ===
 for planet in ['venus', 'earth', 'mars']:
