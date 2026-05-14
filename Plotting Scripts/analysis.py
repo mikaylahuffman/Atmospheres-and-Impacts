@@ -554,7 +554,157 @@ def compute_statistics(values):
     q25, q75 = np.percentile(values, [25, 75])
     return median, q25, q75
 
-def draw_pressure_panel(ax, model_data, planet, panel_label=None, show_legend=False):
+def split_pos_neg_for_log(yvals, error_bars):
+    """
+    Split signed values into:
+    - positive values for the upper log axis
+    - absolute values of negative values for the lower log axis
+
+    The lower axis is plotted using abs(y), but tick labels are formatted as negative.
+    """
+    yvals = np.asarray(yvals, dtype=float)
+    error_bars = np.asarray(error_bars, dtype=float)
+
+    ypos = yvals.copy()
+    ypos[ypos <= 0] = np.nan
+
+    yneg_abs = np.abs(yvals.copy())
+    yneg_abs[yvals >= 0] = np.nan
+
+    yerr_pos = error_bars.copy()
+    yerr_pos[:, ~np.isfinite(ypos)] = np.nan
+
+    yerr_neg = error_bars.copy()
+    yerr_neg[:, ~np.isfinite(yneg_abs)] = np.nan
+
+    return ypos, yerr_pos, yneg_abs, yerr_neg
+
+
+def negative_log_tick_formatter(val, pos):
+    """
+    Lower broken axis is plotted as abs(negative value),
+    but the tick labels should display negative values.
+    """
+    if val <= 0:
+        return ""
+
+    exponent = np.log10(val)
+    if np.isclose(exponent, round(exponent), atol=1e-10):
+        exponent = int(round(exponent))
+        return rf"$-10^{{{exponent}}}$"
+
+    return ""
+
+
+def add_break_marks(ax_upper, ax_lower):
+    """
+    Draw diagonal break marks between upper and lower broken axes.
+    """
+    d = 0.008
+
+    kwargs_upper = dict(
+        transform=ax_upper.transAxes,
+        color="black",
+        clip_on=False,
+        linewidth=1.0
+    )
+
+    kwargs_lower = dict(
+        transform=ax_lower.transAxes,
+        color="black",
+        clip_on=False,
+        linewidth=1.0
+    )
+
+    # Bottom of upper axis
+    ax_upper.plot((-d, +d), (-d, +d), **kwargs_upper)
+    ax_upper.plot((1 - d, 1 + d), (-d, +d), **kwargs_upper)
+
+    # Top of lower axis
+    ax_lower.plot((-d, +d), (1 - d, 1 + d), **kwargs_lower)
+    ax_lower.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs_lower)
+
+# def draw_pressure_panel(ax, model_data, planet, panel_label=None, show_legend=False):
+#     marker_styles = {'Earth': 'o', 'Mars': 'o', 'Venus': 'o'}
+#     expected_pressures = np.array(sorted(initial_pressures.values()), dtype=float)
+
+#     for model, data in model_data.items():
+#         filtered_data = [(p, vals) for (pl, p, vals) in data if pl == planet]
+#         if not filtered_data:
+#             continue
+
+#         pressure_to_vals = {float(p): vals for (p, vals) in filtered_data}
+
+#         yvals = []
+#         lower_err = []
+#         upper_err = []
+
+#         for p in expected_pressures:
+#             if p in pressure_to_vals:
+#                 median, q25, q75 = compute_statistics(pressure_to_vals[p])
+#                 yvals.append(median - p)
+#                 lower_err.append(median - q25)
+#                 upper_err.append(q75 - median)
+#             else:
+#                 yvals.append(np.nan)
+#                 lower_err.append(np.nan)
+#                 upper_err.append(np.nan)
+
+#         yvals = np.array(yvals, dtype=float)
+#         error_bars = np.array([lower_err, upper_err], dtype=float)
+
+#         ax.errorbar(
+#             expected_pressures, yvals, yerr=error_bars,
+#             fmt=marker_styles[planet], capsize=5, capthick=2, linestyle='None',
+#             color=model_colors[model], label=model_labels[model], alpha=0.5
+#         )
+
+#         ax.plot(
+#             expected_pressures, yvals,
+#             color=model_colors[model], alpha=0.5
+#         )
+
+#     ax.plot(
+#         [expected_pressures.min(), expected_pressures.max()],
+#         [0, 0],
+#         linestyle='--',
+#         color='black',
+#         label='No change'
+#     )
+
+#     ax.set_xscale('log')
+#     ax.set_yscale('symlog')
+
+#     if planet=='Mars':
+#         ax.set_xlabel('Initial Pressure (Pa)')
+#     ax.set_ylabel('Final - Initial Pressure (Pa)')
+#     ax.set_title(planet)
+
+#     # ax.set_xticks(expected_pressures)
+#     ax.set_xlim(0.003e5,200e5)
+#     # ax.set_xlabels(expected_pressures)
+
+#     y_ticks = [-1e7, -1e5, -1e3, 0, 1e3, 1e5, 1e7]
+#     ax.set_yticks(y_ticks)
+#     ax.set_ylim(-2e7, 2e7)
+
+#     ax.minorticks_off()
+#     ax.xaxis.set_minor_locator(mpl.ticker.NullLocator())
+#     ax.yaxis.set_minor_locator(mpl.ticker.NullLocator())
+
+#     if panel_label is not None:
+#         ax.text(
+#             -0.23, 1.03, panel_label,
+#             transform=ax.transAxes,
+#             ha='right', va='bottom',
+#             fontsize=16, fontweight='normal',
+#             clip_on=False
+#         )
+
+#     if show_legend:
+#         ax.legend(loc='center left', bbox_to_anchor=(1.08, 0.5), borderaxespad=0)
+
+def draw_pressure_panel_broken(ax_pos, ax_neg, model_data, planet, panel_label=None, show_xlabel=False):
     marker_styles = {'Earth': 'o', 'Mars': 'o', 'Venus': 'o'}
     expected_pressures = np.array(sorted(initial_pressures.values()), dtype=float)
 
@@ -583,97 +733,246 @@ def draw_pressure_panel(ax, model_data, planet, panel_label=None, show_legend=Fa
         yvals = np.array(yvals, dtype=float)
         error_bars = np.array([lower_err, upper_err], dtype=float)
 
-        ax.errorbar(
-            expected_pressures, yvals, yerr=error_bars,
-            fmt=marker_styles[planet], capsize=5, capthick=2, linestyle='None',
-            color=model_colors[model], label=model_labels[model], alpha=0.5
+        ypos, yerr_pos, yneg_abs, yerr_neg = split_pos_neg_for_log(yvals, error_bars)
+
+        # Positive branch: plotted directly on upper log axis
+        ax_pos.errorbar(
+            expected_pressures,
+            ypos,
+            yerr=yerr_pos,
+            fmt=marker_styles[planet],
+            capsize=5,
+            capthick=2,
+            linestyle='None',
+            color=model_colors[model],
+            label=model_labels[model],
+            alpha=0.5
         )
 
-        ax.plot(
-            expected_pressures, yvals,
-            color=model_colors[model], alpha=0.5
+        ax_pos.plot(
+            expected_pressures,
+            ypos,
+            color=model_colors[model],
+            alpha=0.5
         )
 
-    ax.plot(
-        [expected_pressures.min(), expected_pressures.max()],
-        [0, 0],
-        linestyle='--',
-        color='black',
-        label='No change'
-    )
+        # Negative branch: plotted as abs(y) on lower log axis
+        ax_neg.errorbar(
+            expected_pressures,
+            yneg_abs,
+            yerr=yerr_neg,
+            fmt=marker_styles[planet],
+            capsize=5,
+            capthick=2,
+            linestyle='None',
+            color=model_colors[model],
+            alpha=0.5
+        )
 
-    ax.set_xscale('log')
-    ax.set_yscale('symlog')
+        ax_neg.plot(
+            expected_pressures,
+            yneg_abs,
+            color=model_colors[model],
+            alpha=0.5
+        )
 
-    if planet=='Mars':
-        ax.set_xlabel('Initial Pressure (Pa)')
-    ax.set_ylabel('Final - Initial Pressure (Pa)')
-    ax.set_title(planet)
+    # Axis scales
+    ax_pos.set_xscale('log')
+    ax_neg.set_xscale('log')
 
-    # ax.set_xticks(expected_pressures)
-    ax.set_xlim(0.003e5,200e5)
-    # ax.set_xlabels(expected_pressures)
+    ax_pos.set_yscale('log')
+    ax_neg.set_yscale('log')
 
-    y_ticks = [-1e7, -1e5, -1e3, 0, 1e3, 1e5, 1e7]
-    ax.set_yticks(y_ticks)
-    ax.set_ylim(-2e7, 2e7)
+    # These define the shown ranges.
+    # The omitted near-zero region is roughly:
+    # -1e2 < Final - Initial Pressure < +1e3 Pa
+    ax_pos.set_ylim(1e3, 2e7)
+    ax_neg.set_ylim(2e7, 1e2)
 
-    ax.minorticks_off()
-    ax.xaxis.set_minor_locator(mpl.ticker.NullLocator())
-    ax.yaxis.set_minor_locator(mpl.ticker.NullLocator())
+    ax_pos.set_xlim(0.003e5, 200e5)
+
+    # Hide the touching spines
+    ax_pos.spines['bottom'].set_visible(False)
+    ax_neg.spines['top'].set_visible(False)
+
+    # Critical: remove weird middle ticks at the break
+    ax_pos.tick_params(axis='x', which='both', bottom=False, labelbottom=False)
+    ax_neg.tick_params(axis='x', which='both', top=False)
+
+    # Keep x minor ticks off on the hidden upper x-axis
+    ax_pos.xaxis.set_minor_locator(mpl.ticker.NullLocator())
+
+    # Y-axis formatting
+    ax_pos.yaxis.set_major_locator(mpl.ticker.LogLocator(base=10))
+    ax_pos.yaxis.set_major_formatter(mpl.ticker.LogFormatterMathtext(base=10))
+
+    ax_neg.yaxis.set_major_locator(mpl.ticker.LogLocator(base=10))
+    ax_neg.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(negative_log_tick_formatter))
+
+    # Cleaner: remove minor y ticks
+    ax_pos.yaxis.set_minor_locator(mpl.ticker.NullLocator())
+    ax_neg.yaxis.set_minor_locator(mpl.ticker.NullLocator())
+
+    ax_pos.set_title(planet)
+
+    if show_xlabel:
+        ax_neg.set_xlabel('Initial Pressure (Pa)')
+
+    ax_neg.set_ylabel('Final - Initial Pressure (Pa)', labelpad=35)
 
     if panel_label is not None:
-        ax.text(
-            -0.23, 1.03, panel_label,
-            transform=ax.transAxes,
-            ha='right', va='bottom',
-            fontsize=16, fontweight='normal',
+        ax_pos.text(
+            -0.23, 1.08, panel_label,
+            transform=ax_pos.transAxes,
+            ha='right',
+            va='bottom',
+            fontsize=16,
+            fontweight='normal',
             clip_on=False
         )
 
-    if show_legend:
-        ax.legend(loc='center left', bbox_to_anchor=(1.08, 0.5), borderaxespad=0)
+    add_break_marks(ax_pos, ax_neg)
+
+    return ax_pos, ax_neg
+
+# def plot_foveri_composites(model_data):
+#     # --- Individual figures ---
+#     for planet in planets:
+#         fig, ax = plt.subplots(figsize=(12, 6))
+#         draw_pressure_panel(ax, model_data, planet, show_legend=True)
+#         fig.tight_layout()
+
+#         if verbiose != 0:
+#             plt.show()
+
+#         fig.savefig(os.path.join(output_dir, f"{planet}changingp.png"), dpi=600)
+#         fig.savefig(os.path.join(output_dir, f"{planet}changingp.pdf"))
+#         fig.savefig(os.path.join(output_dir, f"{planet}changingp.svg"))
+#         plt.close(fig)
+
+#     # --- Stacked 3-panel figure ---
+#     fig, axs = plt.subplots(3, 1, figsize=(10, 13), sharex=True)
+
+#     panel_planets = ['Venus', 'Earth', 'Mars']
+#     panel_labels = ['a', 'b', 'c']
+
+#     for ax, planet, label in zip(axs, panel_planets, panel_labels):
+#         draw_pressure_panel(ax, model_data, planet, panel_label=label, show_legend=False)
+
+#     handles, labels = axs[0].get_legend_handles_labels()
+#     fig.legend(
+#         handles, labels,
+#         loc='center right',
+#         bbox_to_anchor=(0.93, 0.51),
+#         frameon=True
+#     )
+
+#     fig.tight_layout(rect=[0, 0, 0.74, 1])
+
+#     if verbiose != 0:
+#         plt.show()
+
+#     fig.savefig(os.path.join(output_dir, "stacked_changingp.png"), dpi=600)
+#     fig.savefig(os.path.join(output_dir, "stacked_changingp.pdf"))
+#     fig.savefig(os.path.join(output_dir, "stacked_changingp.svg"))
+#     plt.close(fig)
 
 def plot_foveri_composites(model_data):
-    # --- Individual figures ---
+    # --- Individual figures, still using broken y-axis ---
     for planet in planets:
-        fig, ax = plt.subplots(figsize=(12, 6))
-        draw_pressure_panel(ax, model_data, planet, show_legend=True)
-        fig.tight_layout()
+        fig = plt.figure(figsize=(8.6, 5.8))
+
+        outer = fig.add_gridspec(1, 1)
+        inner = outer[0].subgridspec(
+            2, 1,
+            height_ratios=[1.0, 1.0],
+            hspace=0.04
+        )
+
+        ax_pos = fig.add_subplot(inner[0])
+        ax_neg = fig.add_subplot(inner[1], sharex=ax_pos)
+
+        draw_pressure_panel_broken(
+            ax_pos,
+            ax_neg,
+            model_data,
+            planet,
+            panel_label=None,
+            show_xlabel=True
+        )
+
+        handles, labels = ax_pos.get_legend_handles_labels()
+        fig.legend(
+            handles,
+            labels,
+            loc='center right',
+            bbox_to_anchor=(0.98, 0.5),
+            frameon=True
+        )
+
+        fig.tight_layout(rect=[0.08, 0.06, 0.76, 0.96])
 
         if verbiose != 0:
             plt.show()
 
-        fig.savefig(os.path.join(output_dir, f"{planet}changingp.png"), dpi=600)
-        fig.savefig(os.path.join(output_dir, f"{planet}changingp.pdf"))
-        fig.savefig(os.path.join(output_dir, f"{planet}changingp.svg"))
+        fig.savefig(os.path.join(output_dir, f"{planet}changingp_broken.png"), dpi=600)
+        fig.savefig(os.path.join(output_dir, f"{planet}changingp_broken.pdf"))
+        fig.savefig(os.path.join(output_dir, f"{planet}changingp_broken.svg"))
         plt.close(fig)
 
-    # --- Stacked 3-panel figure ---
-    fig, axs = plt.subplots(3, 1, figsize=(10, 13), sharex=True)
+    # --- Stacked 3-panel broken-y figure ---
+    fig = plt.figure(figsize=(8.6, 10.8))
+
+    outer = fig.add_gridspec(
+        3, 1,
+        hspace=0.27
+    )
 
     panel_planets = ['Venus', 'Earth', 'Mars']
     panel_labels = ['a', 'b', 'c']
 
-    for ax, planet, label in zip(axs, panel_planets, panel_labels):
-        draw_pressure_panel(ax, model_data, planet, panel_label=label, show_legend=False)
+    axes_for_legend = None
 
-    handles, labels = axs[0].get_legend_handles_labels()
+    for i, (planet, label) in enumerate(zip(panel_planets, panel_labels)):
+        inner = outer[i].subgridspec(
+            2, 1,
+            height_ratios=[1.0, 1.0],
+            hspace=0.04
+        )
+
+        ax_pos = fig.add_subplot(inner[0])
+        ax_neg = fig.add_subplot(inner[1], sharex=ax_pos)
+
+        draw_pressure_panel_broken(
+            ax_pos,
+            ax_neg,
+            model_data,
+            planet,
+            panel_label=label,
+            show_xlabel=(planet == 'Mars')
+        )
+
+        if axes_for_legend is None:
+            axes_for_legend = ax_pos
+
+    handles, labels = axes_for_legend.get_legend_handles_labels()
+
     fig.legend(
-        handles, labels,
+        handles,
+        labels,
         loc='center right',
-        bbox_to_anchor=(0.93, 0.51),
+        bbox_to_anchor=(0.98, 0.5),
         frameon=True
     )
 
-    fig.tight_layout(rect=[0, 0, 0.74, 1])
+    fig.tight_layout(rect=[0.07, 0.04, 0.76, 0.98])
 
     if verbiose != 0:
         plt.show()
 
-    fig.savefig(os.path.join(output_dir, "stacked_changingp.png"), dpi=600)
-    fig.savefig(os.path.join(output_dir, "stacked_changingp.pdf"))
-    fig.savefig(os.path.join(output_dir, "stacked_changingp.svg"))
+    fig.savefig(os.path.join(output_dir, "stacked_changingp_broken.png"), dpi=600)
+    fig.savefig(os.path.join(output_dir, "stacked_changingp_broken.pdf"))
+    fig.savefig(os.path.join(output_dir, "stacked_changingp_broken.svg"))
     plt.close(fig)
 
 def extract_composite_by_planet(model_data, model_key):
