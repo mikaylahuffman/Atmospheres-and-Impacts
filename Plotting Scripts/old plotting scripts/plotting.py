@@ -25,9 +25,9 @@ mpl.rcParams.update({
 # === Configuration ===
 verbiose = 0
 planet_dirs = {
-    'Venus': '/scratch/alpine/mihu1229/MCv8/Venus_92.5',
-    'Earth': '/scratch/alpine/mihu1229/MCv8/Earth_1',
-    'Mars': '/scratch/alpine/mihu1229/MCv8/Mars_0.006'
+    'Venus': 'C:/Users/mihu1229/Desktop/plottingtests/Venus_92.5',
+    'Earth': 'C:/Users/mihu1229/Desktop/plottingtests/Earth_1',
+    'Mars': 'C:/Users/mihu1229/Desktop/plottingtests/Mars_0.006'
 }
 starting_pressures = {'Venus': 92.5e5, 'Earth': 1.0e5, 'Mars': 0.006e5}  # Pa
 
@@ -58,9 +58,9 @@ model_labels = {
     'roche': 'Roche',
     'svet': 'Svetsov 2000',
     'svet07': 'Svetsov 2007',
-    'comps': 'Composite',
     'hilke': 'Schlichting',
-    'deniem': 'de Niem'
+    'deniem': 'de Niem',
+    'comps': 'Composite'
 }
 
 excluded_from_fig1 = {'hilke', 'deniem', 'comps'}
@@ -73,9 +73,8 @@ for planet, folder in planet_dirs.items():
     # Include sampleevery in the cache filename so old caches made with
     # a different sampling rate do not silently mess up the x-axis.
     pkl_file = f"{planet.lower()}_medians_sampleevery{sampleevery}.pkl"
-    precomputedflag=False
+
     if os.path.exists(pkl_file):
-        precomputedflag=True
         print(f"Loading precomputed medians for {planet} from {pkl_file}...")
         with open(pkl_file, 'rb') as f:
             processed[planet] = pickle.load(f)
@@ -87,8 +86,6 @@ for planet, folder in planet_dirs.items():
         f for f in os.listdir(folder)
         if f.endswith('.pkl') and f.startswith(planet)
     ]
-    
-    print('files:',files)
 
     planet_medians = {}
 
@@ -101,7 +98,7 @@ for planet, folder in planet_dirs.items():
             if len(parts) > 3 and parts[3] == model:
                 model_files.append(file)
 
-        if len(model_files) == 0 and precomputedflag==False:
+        if len(model_files) == 0:
             print(f"No files found for {planet}, model {model}")
             continue
 
@@ -172,7 +169,7 @@ custom_yticks = {}
 custom_ylims['Venus'] = (0.3e7, 1.4e7)
 custom_yticks['Venus'] = None #[0.4e7, 0.6e7, 0.8e7, 1.0e7, 1.2e7, 1.4e7]
 
-custom_ylims['Earth'] = (0.97e5, 4.7e5)
+custom_ylims['Earth'] = (0.8e5, 1.4e5)
 custom_yticks['Earth'] = None #[0.8e5, 0.9e5, 1.0e5, 1.1e5, 1.2e5, 1.3e5, 1.4e5]
 
 mars_max = np.nanmax([np.nanmax(arr[2]) for arr in processed['Mars'].values()])
@@ -347,7 +344,7 @@ make_subplot(axs2[2, 1], 'Mars', processed['Mars'], 'Mars', zoom=True, comps_onl
 
 fig2_handles = build_custom_legend([
     'pham250', 'shu', 'kerr', 'ga', 'roche', 'svet', 'svet07',
-    'comps','hilke', 'deniem'
+    'hilke', 'deniem', 'comps'
 ])
 
 

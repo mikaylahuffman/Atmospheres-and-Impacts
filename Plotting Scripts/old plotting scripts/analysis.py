@@ -20,9 +20,9 @@ mpl.rcParams.update({
 
 # === Settings ===
 verbiose = 0
-# base_dir = r"C:/Users/mihu1229/Desktop/plottingtests"
-base_dir = r"/scratch/alpine/mihu1229/MCv8"
+base_dir = r"C:/Users/mihu1229/Desktop/plottingtests"
 output_dir = base_dir
+# base_dir = r"/scratch/alpine/mihu1229/MCv8"
 
 planets = ['Earth', 'Mars', 'Venus']
 pressures = [0.006, 0.1, 0.25, 1.0, 10.0, 92.5]
@@ -45,7 +45,7 @@ model_labels = {
     "comps": "Composite",
     "hilke": "Schlichting",
     "deniem": "de Niem"
-    # "compns": "Composite without Roche"
+    # "compns": "Composite without Svetsov 2007"
 }
 
 model_colors = {
@@ -256,33 +256,22 @@ def _concat_if_present(dct, planet):
 def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, title, xlabel, logcheck=False):
     plotted_any = False
 
-    is_radius_plot = xlabel == "Impactor Radius (km)"
-
-    # Use a fixed visible plotting range for the radius PDFs.
-    # This prevents sparse sampling over the full 0.3–5000 km range.
-    if is_radius_plot:
-        x_plot_min, x_plot_max = 0.3, 1.2
-    else:
-        x_plot_min, x_plot_max = 0.0, 50.0
-
     for planet in ['Venus', 'Earth', 'Mars']:
         if planet not in data_by_planet:
             continue
 
         data = np.array(data_by_planet[planet], dtype=float)
 
-        if is_radius_plot or logcheck:
+        if logcheck:
             data = data[data > 0]
 
         if len(data) == 0:
             continue
 
-        # Histogram bins
-        if is_radius_plot:
-            # Match the displayed radius range.
-            bins = np.logspace(np.log10(x_plot_min), np.log10(x_plot_max), 40)
-        else:
-            bins = 40
+        bins = (
+            np.logspace(np.log10(data.min()), np.log10(data.max()), 40)
+            if xlabel=="Impactor Radius (km)" else 40
+        )
 
         ax.hist(
             data,
@@ -293,23 +282,12 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
             label=planet
         )
 
-        # PDF x grid
-        if is_radius_plot:
-            # Dense sampling over the visible x range.
-            # logspace is better for a steep power law.
-            x = np.logspace(np.log10(x_plot_min), np.log10(x_plot_max), 1000)
-        else:
-            x = np.linspace(x_plot_min, x_plot_max, 1000)
-
+        x = (
+            np.logspace(np.log10(data.min()), np.log10(data.max()), 1000)
+            if logcheck else np.linspace(data.min(), data.max(), 1000)
+        )
         y = pdf_func_by_planet[planet](x)
-
-        # Normalize over the same x-domain that is actually plotted.
-        area = np.trapezoid(y, x)
-        if np.isfinite(area) and area != 0:
-            y = y / area
-        else:
-            print(f"[WARN] Could not normalize PDF for {planet}: area={area}")
-            continue
+        y = y / np.trapezoid(y, x)
 
         ax.plot(x, y, color=planet_colors[planet], linewidth=2)
         plotted_any = True
@@ -320,19 +298,22 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
 
     ax.set_title(title)
     ax.set_xlabel(xlabel)
+    
     ax.set_ylabel("Probability Density")
 
-    if is_radius_plot:
-        ax.set_xlim(x_plot_min, x_plot_max)
+    if logcheck:
+        ax.set_xscale('log')
+    if xlabel=="Impactor Radius (km)":
+        ax.set_xlim(0.3, 1.2)
         ax.annotate(
-            '',
-            xy=(1.02 + 0.015, 0), xytext=(1.0 + 0.015, 0),
-            xycoords=('axes fraction', 'axes fraction'),
-            arrowprops=dict(arrowstyle='-|>', color='black', lw=0),
-            annotation_clip=False
-        )
+        '',
+        xy=(1.02+0.015, 0), xytext=(1.0+0.015, 0),
+        xycoords=('axes fraction', 'axes fraction'),
+        arrowprops=dict(arrowstyle='-|>', color='black', lw=0),
+        annotation_clip=False
+        ) #making an arrow
     else:
-        ax.set_xlim(x_plot_min, x_plot_max)
+        ax.set_xlim(0, 50)
 
 # === Plot Overlaid Histograms ===
 earth_asteroids_df = _concat_if_present(asteroids, 'Earth')

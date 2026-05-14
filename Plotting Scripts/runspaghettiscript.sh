@@ -22,4 +22,4 @@ module load anaconda
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate MCenv
 
-python plotting.py 
+python spaghettiplots.py

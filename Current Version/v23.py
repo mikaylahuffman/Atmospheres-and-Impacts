@@ -16,8 +16,8 @@ from tqdm import tqdm
 import os
 import argparse
 
-multirun=True #True= use multiple CPUs to run
-runlocal=False #True= running on like your laptop, False= on a supercomputer cluster
+multirun=False #True= use multiple CPUs to run
+runlocal=True #True= running on like your laptop, False= on a supercomputer cluster
 
 if runlocal==False:
   parser = argparse.ArgumentParser(description='')
@@ -36,7 +36,7 @@ if runlocal==False:
 
 
 if runlocal==False: base_dir = r"/scratch/alpine/mihu1229/MCv8"
-if runlocal==True: base_dir = r"C:/Users/mihu1229/Desktop/sensitivity test/rmin0p175"
+if runlocal==True: base_dir = r"C:/Users/mihu1229/Desktop/yimpsensitivity/yimpdoubled"
 
 if runlocal==False: args = parser.parse_args()
 
@@ -112,7 +112,7 @@ medianoravg='median' #calc the median w/ IQR or the avg w/ stdev
 
 # numruns=30
 numruns=5
-numimps=int(5e6)
+numimps=int(5e5)
 # numimps=9200000
 if verbiose==1:
     print(numimps)
@@ -416,8 +416,8 @@ v_lowerbound=1
 v_upperbound=100
 v_imp_array=np.linspace(v_lowerbound,v_upperbound,numimps)
 
-cometyimp=0.2
-asteroidyimp=0.02 #values from deNiem 2012
+cometyimp=2*0.2
+asteroidyimp=2*0.02 #values from deNiem 2012
 
 rho_comet=1e12 #kg/km^3
 rho_asteroid=2.7e12 #kg/km^3

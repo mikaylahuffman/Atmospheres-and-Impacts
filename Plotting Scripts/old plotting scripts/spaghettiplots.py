@@ -15,7 +15,7 @@ plt.rcParams.update({
 })
 
 # ——— CONFIGURATION —————————————————————————————————————
-base_dir       = "/scratch/alpine/mihu1229/MCv8"
+base_dir       = "C:/Users/mihu1229/Desktop/plottingtests" #"/scratch/alpine/mihu1229/MCv8"
 models         = ['pham250','shu','kerr','ga','roche','svet','svet07','hilke','deniem','comps']#,'compns']
 column_name    = 'Running Total Atm P (Pa)'
 runs_per_plot  = 5
@@ -42,13 +42,9 @@ def sorted_run_files(folder, planet, pstr, model):
 
 # ——— PLOTTING ———————————————————————————————————————
 def plot_model_spaghetti(planet, pressure, model):
-    print('pressure =',pressure)
     pstr   = pressure_str(pressure)
-    print('pstr =',pstr)
     folder = os.path.join(base_dir, f"{planet}_{pstr}")
-    print('folder =',folder)
-    files  = sorted_run_files(folder, planet, pressure, model)
-    print('files =',files)
+    files  = sorted_run_files(folder, planet, pstr, model)
     if not files:
         print(f"No files for {planet} @ {pressure} bar, model {model}")
         return
@@ -111,4 +107,4 @@ def plot_all_models(planet, pressure):
 
 # ——— MAIN ——————————————————————————————————————————
 if __name__ == "__main__":
-    plot_all_models("Earth", 1.0)
+    plot_all_models("Earth", 1)

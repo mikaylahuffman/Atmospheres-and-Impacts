@@ -1,10 +1,8 @@
 #!/usr/bin/bash
-#SBATCH --account=ucb637_asc2
-#SBATCH --qos=normal
-#SBATCH --ntasks=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --account=ucb637_asc1
+#SBATCH --ntasks=32
+#SBATCH --ntasks-per-node=32
 #SBATCH --nodes=1
-#SBATCH --mem=64G
 #SBATCH --time=10:00:00
 #SBATCH --job-name=impsandatmsanalysis
 #SBATCH --partition=amilan
@@ -14,12 +12,7 @@
 #SBATCH --mail-user=mihu1229@colorado.edu
 
 
-set -euo pipefail
-
-module purge
-module load anaconda
-
-source "$(conda info --base)/etc/profile.d/conda.sh"
+source activate base
 conda activate MCenv
 
 python analysis.py 
