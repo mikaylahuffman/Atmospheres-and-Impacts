@@ -10,9 +10,8 @@ from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 import matplotlib as mpl
 
-# -----------------------------------------------------------------------------
+
 # Matplotlib style
-# -----------------------------------------------------------------------------
 minusval = 4
 mpl.rcParams.update({
     'font.size':       16 - minusval,
@@ -24,11 +23,8 @@ mpl.rcParams.update({
     'figure.titlesize':20 - minusval
 })
 
-# -----------------------------------------------------------------------------
-# Configuration
-# -----------------------------------------------------------------------------
+# Config
 verbose             = 0
-# Update these paths to your actual locations for the new starting pressures
 planet_dirs         = {
     'Earth': '/scratch/alpine/mihu1229/MCv8/Earth_0.25',
     'Mars' : '/scratch/alpine/mihu1229/MCv8/Mars_1'
@@ -39,15 +35,15 @@ median_or_avg       = 'median'          # 'avg' or 'median'
 sample_every        = 1
 plot_uncertainty    = True
 low_alpha           = 0.1               # for de-emphasised models
-plot_stride         = 10                # down-sample to avoid overflow
+plot_stride         = 10                # down-sample to avoid mem issues
 
-# ── per-planet y-limits (as requested) ───────────────────────────────────────
+# planet y-limits
 custom_ylims = {
     'Earth': (2.0e4, 2.5e6),  # 0.01e6 to 100*0.25e5
     'Mars' : (1.0e4, 1.5e6)   # 0.01e6 to 30e5
 }
 
-# ── per-planet y-ticks (nice) ────────────────────────────────────────────────
+# planet y-ticks
 custom_yticks = {
     # stays within 2.5e6 upper bound
     'Earth': [2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6],
@@ -55,7 +51,7 @@ custom_yticks = {
     'Mars' : [1e4, 3e4, 1e5, 3e5, 1e6]
 }
 
-# ── colours, labels, model sets ───────────────────────────────────────────────
+# colors, labels, model sets 
 model_labels = {
     "pham250": "Pham n=250",
     "shu": "Shuvalov",
@@ -85,9 +81,8 @@ model_colors = {
 # hide composites in the "no-comps" row
 excluded_from_fig1 = {'hilke', 'deniem', 'comps'}
 
-# -----------------------------------------------------------------------------
-# Load or compute medians / IQR
-# -----------------------------------------------------------------------------
+
+# Load or compute medians & IQR
 processed = {}
 for planet, folder in planet_dirs.items():
     cache_file = f"{planet.lower()}_medians.pkl"
@@ -132,11 +127,10 @@ for planet, folder in planet_dirs.items():
     with open(cache_file, 'wb') as fh:
         pickle.dump(planet_stats, fh)
 
-# -----------------------------------------------------------------------------
+
 # Plot helpers
-# -----------------------------------------------------------------------------
 def build_custom_legend(models):
-    """Legend entries + IQR + initial-pressure line."""
+    """Legend entries + IQR + initial pressure line."""
     handles = [Line2D([0], [0], color=model_colors[m], label=model_labels[m])
                for m in models]
     handles.append(Patch(color='gray', alpha=0.3, label='IQR'))
@@ -157,7 +151,7 @@ def plot_planet(ax, planet, modeldata, comps_only=False):
                 continue
             alpha = 1.0
 
-        # down-sample for safety
+        # down-sample to reduce mem issues
         x = np.arange(0, len(med) * sample_every, sample_every)[::plot_stride]
         med = med[::plot_stride]
         p25 = p25[::plot_stride]
@@ -179,7 +173,7 @@ def plot_planet(ax, planet, modeldata, comps_only=False):
     ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
     ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
 
-    # per-planet y-lims & ticks
+    # planet y-lims & ticks
     ax.set_ylim(*custom_ylims[planet])
     yticks = custom_yticks.get(planet, [])
     if yticks:
@@ -189,9 +183,8 @@ def plot_planet(ax, planet, modeldata, comps_only=False):
         sci_fmt.set_powerlimits((0, 0))  # always use scientific notation
         ax.yaxis.set_major_formatter(sci_fmt)
 
-# -----------------------------------------------------------------------------
+
 # Printing helpers (summary)
-# -----------------------------------------------------------------------------
 def _fmt_bar(pa_value):
     """Format Pa value in bar with sensible sig figs."""
     return f"{pa_value/1e5:.3g} bar"
@@ -205,7 +198,6 @@ def print_final_pressure_summary(processed, starting_pressures, model_labels):
     for planet, modeldata in processed.items():
         init_bar = _fmt_bar(starting_pressures[planet])
         print(f"{planet} initial pressure {init_bar}")
-        # Sort by human-readable label for consistent order
         items = sorted(modeldata.items(), key=lambda kv: model_labels.get(kv[0], kv[0]).lower())
         for model_key, (med, p25, p75) in items:
             label = model_labels.get(model_key, model_key)
@@ -216,9 +208,8 @@ def print_final_pressure_summary(processed, starting_pressures, model_labels):
             print(f"{label} final pressure: median {med_f}  25th percentile {p25_f}  75th percentile {p75_f}")
         print("")  # blank line between planets
 
-# -----------------------------------------------------------------------------
-# Build per-planet stacked figures: top = no comps, bottom = with comps
-# -----------------------------------------------------------------------------
+
+# Build planet stacked figures: top = no comps, bottom = with comps
 def make_planet_pair(planet, outfile_prefix):
     """
     Create a 2-row figure for a single planet:
@@ -248,9 +239,9 @@ def make_planet_pair(planet, outfile_prefix):
     fig.savefig(f"{outfile_prefix}.svg")
     if verbose: print(f"→ Saved {outfile_prefix}.*")
 
-# ── print textual summary ─────────────────────────────────────────────────────
+# print summary
 print_final_pressure_summary(processed, starting_pressures, model_labels)
 
-# ── create the two requested figures ─────────────────────────────────────────
+# make figures 
 make_planet_pair('Mars',  outfile_prefix='mars_stack_nocomps_top_comps_bottom')
 make_planet_pair('Earth', outfile_prefix='earth_stack_nocomps_top_comps_bottom')

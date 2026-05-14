@@ -132,7 +132,7 @@ if planet=='Earth':
  
   r_planet=6371 # km
   gravity=0.0098 #km/(s^2)
-  presentday_rho_atm=1.217E9 # kg km^-3 this value is surface density but idk if that's right mika here
+  presentday_rho_atm=1.217E9 # kg km^-3 this value is surface density 
   presentday_atm_m=5.1e+18 #kg  
 
   e_0 = 54.7e-3 #km^2 s^-2 Interpolating for N2 using P=1 bar
@@ -142,7 +142,7 @@ if planet=='Earth':
 
   slope=-3.4648591106161257 #for power law. -3.5, -3.4648591106161257 for earth, -3.3473969290011216 for mars, -3.4533697696073387 for venus
 
-  probcomet=0.18 #from caitlin paper pg10 from olsson-steel 1987. probability of a comet. 1-this value is prob of an asteroid
+  probcomet=0.18 #from caitlin caldwell unpublished paper pg10 from olsson-steel 1987. probability of a comet. 1-this value is prob of an asteroid
 
 elif planet=='Mars':
   v_esc=5.03 #km s^-1
@@ -151,7 +151,7 @@ elif planet=='Mars':
   bulkdensity=3.934E12
   r_planet=3389.5 # km
   gravity=0.00373 #km/(s^2)
-  presentday_rho_atm=2e7 # kg km^-3 this value is surface density but idk if that's right mika here
+  presentday_rho_atm=2e7 # kg km^-3 this value is surface density
   presentday_atm_m=2.5E16 #kg
 
   e_0 = 283.78e-3 #km^2 s^-2 from https://www.engineersedge.com/thermodynamics/thermodynamic_properties_carbon_dioxide_14778.htm Extrapolating using a sigmoid function in log-log space for CO2
@@ -161,7 +161,7 @@ elif planet=='Mars':
 
   slope=-3.3473969290011216 #for power law. -3.5, -3.4648591106161257 for earth, -3.3473969290011216 for mars, -3.4533697696073387 for venus
 
-  probcomet=0.06 #from caitlin paper pg10 from olsson-steel 1987. probability of a comet. 1-this value is prob of an asteroid
+  probcomet=0.06 #from caitlin caldwell unpublishedpaper pg10 from olsson-steel 1987. probability of a comet. 1-this value is prob of an asteroid
   
 elif planet=='Venus':
   v_esc=10.36 #km s^-1
@@ -170,7 +170,7 @@ elif planet=='Venus':
   bulkdensity=5.243E12
   r_planet=6051.8 # km
   gravity=0.00887 #km/(s^2)
-  presentday_rho_atm=6.5e10 # kg km^-3 this value is surface density but idk if that's right mika here
+  presentday_rho_atm=6.5e10 # kg km^-3 this value is surface density
   presentday_atm_m=4.8e20 #kg
 
   e_0 = 94.95e-3 #km^2 s^-2 from https://www.engineersedge.com/thermodynamics/thermodynamic_properties_carbon_dioxide_14778.htm Extrapolating using a sigmoid function in log-log space for CO2
@@ -180,13 +180,13 @@ elif planet=='Venus':
 
   slope=-3.4533697696073387 #for power law. -3.5, -3.4648591106161257 for earth, -3.3473969290011216 for mars, -3.4533697696073387 for venus
 
-  probcomet=0.3 #from caitlin paper pg10 from olsson-steel 1987. probability of a comet. 1-this value is prob of an asteroid
+  probcomet=0.3 #from caitlin caldwell unpublished paper pg10 from olsson-steel 1987. probability of a comet. 1-this value is prob of an asteroid
 
 else:
   if verbiose==1:
     print('planet',planet,'not recognized')
 
-#for fixing svetsov 2000. this is a huge hassle to set up, so just email me mikaylarhuffman@gmail.com if you need any planet & starting 
+#for fixing svetsov 2000. this is a huge hassle to set up, so just email me mikaylarhuffman@gmail.com if you need any planet & starting P that ain't in here
 svetfixdict = {
     'Earth': {
         0.006: {
@@ -912,7 +912,7 @@ def drag(r_imp,v_imp):
   projectedarea=np.pi*r_imp**2 #projected area is a circle
   #terminalvelocity=((2*m_imp*gravity)/(rho_imp*projectedarea*c_d))**0.5 #i don't think the min should be v_term. v_term is typically the max for a free falling obj
   # print(terminalvelocity)
-  #if newv_imp<terminalvelocity: #mika here i feel like the lowest velocity it can be is terminal velocity
+  #if newv_imp<terminalvelocity: #i feel like the lowest velocity it can be is terminal velocity
     #newv_imp=terminalvelocity
   return newv_imp
 
@@ -2260,7 +2260,7 @@ def comprun(papereqn=False):
     if verbiose==1:
       print('output units',outputdataunits,'not recognized')
       print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
-  #mika here if change models will need to alter these too
+  #if change models will need to alter these too
 
 def is_float(string):
   try:
@@ -2565,7 +2565,7 @@ def compatmchangerun(papereqn=False):
       print('output units',outputdataunits,'not recognized')
       print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
   compusingcheck=False
-  #mika here if change models will need to alter these too
+  #if change models will need to alter these too
 
 #@title individual model running functions
 def deniemrun():
@@ -3076,7 +3076,7 @@ def svet07run():
       if verbiose==1: print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
 
 #@title run models function
-def runmodels(): #doing globals like this ain't great coding habits
+def runmodels(): #doing globals like this ain't great coding habits lol my compsci 101 prof is crying
   global compwithsvet07check; global sizeregimes; global r_imp_array; global v_imp_array; global rho_imp_array; global yimp_array; global n;global j;global deniem_M_loss; global deniem_M_gain; global hilke_M_loss; global hilke_M_gain; global shu_M_loss;global shu_M_gain;global pham10_M_loss;global pham10_M_gain;global pham2400_M_loss;global pham2400_M_gain;global pham10_corresponding_crit_imp_r;global pham2400_corresponding_crit_imp_r;global pham10_delta_M; global hilke_delta_M;global pham2400_delta_M;global shu_delta_M;global kerr_M_loss;global kerr_M_gain; global kerr_delta_M;global ga_M_loss;global ga_M_gain;global ga_delta_M;global ga_corresponding_crit_imp_r;global svet_M_loss;global svet_M_gain;global svet_delta_M;global svet07_M_loss;global svet07_M_gain;global svet07_delta_M;global shu_P_loss;global shu_P_gain; global deniem_P_gain; global deniem_P_loss; global hilke_P_gain; global pham10_P_loss;global pham10_P_gain;global hilke_P_loss;global pham2400_P_loss;global pham2400_P_gain;global pham10_delta_P;global deniem_delta_P; global deniem_delta_M;global hilke_delta_P;global pham2400_delta_P;global shu_delta_P;global kerr_P_loss; global kerr_P_gain; global kerr_delta_P; global kerr_m_crit;global ga_P_loss;global ga_P_gain;global ga_delta_P;global ga_m_crit;global svet_P_loss;global svet_P_gain;global svet_delta_P;global svet07_P_loss;global svet07_P_gain;global svet07_delta_P;global roche_P_loss; global roche_P_gain; global roche_delta_P; global roche_m_crit;global roche_M_loss; global roche_M_gain; global roche_delta_M
   for j in range(len(mods['Model Name'])):
     if mods['Model Name'][j]=='Pham':
@@ -3173,7 +3173,7 @@ def runmodels(): #doing globals like this ain't great coding habits
     else:
       if verbiose==1: print('model',mods['Model Name'][j],'not recognized')
       if verbiose==1: print('contact Mikayla Huffman mikaylarhuffman@gmail.com for help')
-    #mika here need to modify (add more elifs) as you add more models
+    #need to modify (add more elifs) as you add more models
 
 def multiproc_running_models(run_id):
     global numrun, r_imp_array, v_imp_array, rho_imp_array, yimp_array

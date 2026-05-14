@@ -22,7 +22,7 @@ mpl.rcParams.update({
     'figure.titlesize': 20-minusval
 })
 
-# === Configuration ===
+# === Config ===
 verbiose = 0
 planet_dirs = {
     'Venus': '/scratch/alpine/mihu1229/MCv8/Venus_92.5',
@@ -70,8 +70,7 @@ processed = {}
 
 for planet, folder in planet_dirs.items():
 
-    # Include sampleevery in the cache filename so old caches made with
-    # a different sampling rate do not silently mess up the x-axis.
+
     pkl_file = f"{planet.lower()}_medians_sampleevery{sampleevery}.pkl"
     precomputedflag=False
     if os.path.exists(pkl_file):
@@ -92,7 +91,7 @@ for planet, folder in planet_dirs.items():
 
     planet_medians = {}
 
-    # Process one model at a time instead of storing all models for the planet.
+    # Process one model at a time instead of storing all models for the planet
     for model in model_colors.keys():
 
         model_files = []
@@ -147,7 +146,7 @@ for planet, folder in planet_dirs.items():
             p25 = np.nanpercentile(arr, 25, axis=0)
             p75 = np.nanpercentile(arr, 75, axis=0)
 
-        # Store as float32 to keep the cached medians smaller.
+        # Store as float32 to keep the cached medians smaller to reduce mem issues
         planet_medians[model] = (
             median.astype(np.float32),
             p25.astype(np.float32),
@@ -235,7 +234,7 @@ def make_subplot(ax, planet, modeldata, title, zoom=False, comps_only=False):
     ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
     ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
 
-    # Moves the x-axis offset text, e.g. ×10^3, slightly outward
+    # Moves the x-axis offset text, e.g. *10^3, slightly outward
     # so it does not overlap the xlabel.
     ax.xaxis.get_offset_text().set_x(0.98)
     ax.xaxis.get_offset_text().set_y(-0.06)
@@ -335,7 +334,7 @@ fig1.savefig("nocomps.pdf", bbox_inches='tight')
 fig1.savefig("nocomps.svg", bbox_inches='tight')
 
 
-# ----- Figure 2: composites included -----
+# ----- Figure 2: yes composites -----
 make_subplot(axs2[0, 0], 'Venus', processed['Venus'], 'Venus', comps_only=True)
 make_subplot(axs2[0, 1], 'Venus', processed['Venus'], 'Venus', zoom=True, comps_only=True)
 

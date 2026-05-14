@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ——— GLOBAL STYLING —————————————————————————————————————
+# style
 plt.rcParams.update({
     'font.size': 16,
     'axes.titlesize': 18,
@@ -14,7 +14,7 @@ plt.rcParams.update({
     'figure.titlesize': 20
 })
 
-# ——— CONFIGURATION —————————————————————————————————————
+# config
 base_dir       = "/scratch/alpine/mihu1229/MCv8"
 models         = ['pham250','shu','kerr','ga','roche','svet','svet07','hilke','deniem','comps']#,'compns']
 column_name    = 'Running Total Atm P (Pa)'
@@ -22,7 +22,7 @@ runs_per_plot  = 5
 nrows, ncols   = 2, 3   # 2 rows × 3 columns
 dpi            = 600
 
-# ——— UTILITIES ————————————————————————————————————————
+# helpers
 def pressure_str(p):
     s = str(p)
     if '.' in s:
@@ -40,7 +40,7 @@ def sorted_run_files(folder, planet, pstr, model):
         return int(name.split('_run')[-1].split('.pkl')[0])
     return sorted(files, key=run_index)
 
-# ——— PLOTTING ———————————————————————————————————————
+# plotting
 def plot_model_spaghetti(planet, pressure, model):
     print('pressure =',pressure)
     pstr   = pressure_str(pressure)
@@ -85,7 +85,7 @@ def plot_model_spaghetti(planet, pressure, model):
     for j in range(len(chunks), nrows*ncols):
         axes[j].axis('off')
 
-    # determine global y-limits from existing axes
+    # determine global y-lims from existing axes
     all_ylims = [axes[i].get_ylim() for i in range(len(chunks))]
     ymins = [y0 for y0, y1 in all_ylims]
     ymaxs = [y1 for y0, y1 in all_ylims]
@@ -109,6 +109,6 @@ def plot_all_models(planet, pressure):
     for model in models:
         plot_model_spaghetti(planet, pressure, model)
 
-# ——— MAIN ——————————————————————————————————————————
+# main zone
 if __name__ == "__main__":
     plot_all_models("Earth", 1.0)

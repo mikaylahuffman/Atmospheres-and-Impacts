@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Export per-planet Excel tables of final atmospheric pressures.
+Export Excel tables of final atmospheric pressures for each planet.
 
 Scans pickle files named:
   {planet}_P0_{pressure}bar_{model}_run*.pkl
-found inside:
+inside:
   {base_dir}/{planet}_{pressure_dir_str}/
 
 Rows: initial pressure (Pa)
@@ -25,19 +25,18 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-# ─── Settings (flexible) ─────────────────────────────────────────────────────
+# setup
 base_dir = r"/scratch/alpine/mihu1229/MCv8"
 
-planets   = ['Earth', 'Mars', 'Venus']          # edit later if needed
-pressures = [0.006, 0.1, 0.25, 1.0, 10.0, 92.5] # edit later if needed
+planets   = ['Earth', 'Mars', 'Venus']          
+pressures = [0.006, 0.1, 0.25, 1.0, 10.0, 92.5] 
 
-# Keep these exactly consistent with your previous script
 initial_pressures   = {p: p * 1e5 for p in pressures}
 pressure_dir_strs   = {p: str(p).rstrip('0').rstrip('.') if '.' in str(p) else str(p)
                        for p in pressures}
 pressure_file_strs  = {p: str(p) for p in pressures}
 
-# Filename model keys -> human-readable (lowercase) column name prefixes
+#human readable instead of my evil shorthand
 model_human = {
     "kerr":    "kegerreis",
     "roche": "roche",
@@ -52,7 +51,7 @@ model_human = {
     "compns": "composite without roche"
 }
 
-# ─── Helpers ─────────────────────────────────────────────────────────────────
+# helpers
 def find_run_paths(base_dir, planet, p_bar, model_key):
     """Return list of run pickle paths for (planet, initial pressure in bar, model)."""
     dirname = f"{planet}_{pressure_dir_strs[p_bar]}"
@@ -82,7 +81,7 @@ def collect_data():
     """
     data = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
-    # Build a list of all candidate paths for a tidy progress bar
+    # Build a list of all candidate paths w/ progress bar
     all_paths = []
     for pl in planets:
         for p_bar in pressures:
@@ -92,7 +91,7 @@ def collect_data():
     print(f"Found ~{len(all_paths)} pickle files to scan.")
     for path in tqdm(all_paths, desc="Loading pickle files"):
         fname = os.path.basename(path)
-        # Expect pattern: {planet}_P0_{pressure}bar_{model}_run*.pkl
+        # expect pattern: {planet}_P0_{pressure}bar_{model}_run*.pkl
         try:
             planet = fname.split("_P0_")[0]
             rest   = fname.split("_P0_")[1]
@@ -148,7 +147,7 @@ def write_excels(data):
         df.to_excel(out)
         print(f"Wrote {out}: {df.shape[0]} rows x {df.shape[1]} columns")
 
-# ─── Main ────────────────────────────────────────────────────────────────────
+# main zone
 if __name__ == "__main__":
     all_data = collect_data()
     write_excels(all_data)

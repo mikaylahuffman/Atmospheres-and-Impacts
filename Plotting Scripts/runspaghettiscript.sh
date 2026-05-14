@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-#SBATCH --account=ucb637_asc2
+#SBATCH --account=[your account username]
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --qos=normal

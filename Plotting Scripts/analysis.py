@@ -70,8 +70,8 @@ comets = defaultdict(list)
 planet_masses = {'venus': [], 'earth': [], 'mars': []}
 
 # === Constants ===
-rho_comet = 1e12       # kg/km³
-rho_asteroid = 2.7e12  # kg/km³
+rho_comet = 1e12       # kg/km3
+rho_asteroid = 2.7e12  # kg/km3
 
 # === Count total number of files ===
 total_files = 0
@@ -95,7 +95,7 @@ for planet in planets:
 
 print(f"Expecting to load about {total_files} pickle files...")
 
-# === Load All Data with Progress Bar ===
+# === Load Data ===
 pbar = tqdm(total=total_files, desc="Loading Pickle Files")
 
 for planet in planets:
@@ -258,8 +258,6 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
 
     is_radius_plot = xlabel == "Impactor Radius (km)"
 
-    # Use a fixed visible plotting range for the radius PDFs.
-    # This prevents sparse sampling over the full 0.3–5000 km range.
     if is_radius_plot:
         x_plot_min, x_plot_max = 0.3, 1.2
     else:
@@ -293,17 +291,15 @@ def plot_overlay_histograms_with_pdfs(ax, data_by_planet, pdf_func_by_planet, ti
             label=planet
         )
 
-        # PDF x grid
+
         if is_radius_plot:
-            # Dense sampling over the visible x range.
-            # logspace is better for a steep power law.
             x = np.logspace(np.log10(x_plot_min), np.log10(x_plot_max), 1000)
         else:
             x = np.linspace(x_plot_min, x_plot_max, 1000)
 
         y = pdf_func_by_planet[planet](x)
 
-        # Normalize over the same x-domain that is actually plotted.
+
         area = np.trapezoid(y, x)
         if np.isfinite(area) and area != 0:
             y = y / area
